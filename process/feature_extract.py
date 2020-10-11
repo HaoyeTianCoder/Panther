@@ -11,10 +11,11 @@ import re
 
 
 class Feature:
-    def __init__(self, w2vName):
+    def __init__(self, fea, w2vName):
         self.logger = logging.getLogger(__name__)
         self.sample_number = 0
         self.error_number = 0
+        self.fea = fea
         self.w2v_entry = word2vec.W2v(w2vName).w2v
 
 
@@ -128,6 +129,10 @@ class Feature:
         # if w2v == 'bert':
         #     bug_vec, patched_vec = self.w2v_entry.output_vec(bugy_all2, patched_all2)
         # elif w2v == 'doc':
+
+        if self.fea == 'engineerings' and self.w2v_entry == None:
+            return [], bugy_all+patched_all
+
         bug_vec, patched_vec = self.w2v_entry.output_vec(bugy_all2, patched_all2)
 
 
@@ -139,35 +144,35 @@ class Feature:
         # embedding = subtract + multiple + [cos] + [euc]
         embedding = np.hstack((subtract, multiple, cos, euc,))
 
-        return embedding, bugy_all+patched_all
+        return list(embedding.flatten()), bugy_all+patched_all
 
     def feature_obtain_incorrect_sample(self, patches, engineerings):
         # label = 0.0
         incorrect_number = 0
         all_vector = []
         all_buggy_patched = []
-        for i in range(3):
+        for i in range(len(patches)):
             patch = patches[i]
             engineering = engineerings[i]
             for root, dirs, files in os.walk(patch):
-                if len(files) == 3:
-                    flag = False
-                    for file in files:
-                        if file.endswith('.patch'):
-                            # embedding = [np.random.random_sample()]
-                            try:
-                                embedding, buggy_patched = self.embedding_feature(os.path.join(root, file),)
-                            except Exception as e:
-                                self.logger.debug(e)
-                                continue
-                            embedding = []
-                            flag = True
-                            break
-                    if not flag:
-                        continue
-                    subPath = root.replace(patch,'')
+                for file in files:
+                    subPath = root.replace(patch, '')
                     bugName = subPath.split('/')[1]
                     toolName = subPath.split('/')[2]
+
+                    if toolName.startswith('Arja') or toolName.startswith('GenProg'):
+                        continue
+                    if not file.endswith('.patch'):
+                        continue
+                    # embedding = [np.random.random_sample()]
+                    try:
+                        embedding, buggy_patched = self.embedding_feature(os.path.join(root, file),)
+                    except Exception as e:
+                        self.logger.error(e)
+                        continue
+
+                    # if self.fea != 'embeddings':
+
                     if bugName.startswith('Closure'):
                         engineeringName = 'P4Jfeatures_' + bugName + '-' + toolName + '.json'
                     else:
@@ -182,18 +187,27 @@ class Feature:
                             engineering_features_list = [float(value) for key, value in engineering_features_dict_sorted]
                             if engineering_features_list == []:
                                 continue
-                            # vector = [label] + engineering_features_list + embedding
-                            vector =  engineering_features_list + embedding
-                            all_buggy_patched.append([buggy_patched])
-                            all_vector.append(vector)
-                            incorrect_number += 1
-                            self.sample_number += 1
-                            self.logger.info('sample number: {}'.format(self.sample_number))
                     except Exception as e:
-                        self.error_number += 1
                         # print('********: {}'.format(engineering_path))
-                else:
-                    pass
+                        self.error_number += 1
+
+                        # keep the same number of dataset with embeddings
+                        continue
+
+                    # separate or combine
+                    if self.fea == 'embeddings':
+                        vector = embedding
+                    elif self.fea == 'engineerings':
+                        vector = engineering_features_list
+                    elif self.fea == 'combinings':
+                        vector = engineering_features_list + embedding
+
+                    all_buggy_patched.append([buggy_patched])
+                    all_vector.append(vector)
+                    incorrect_number += 1
+                    self.sample_number += 1
+                    self.logger.info('sample number: {}'.format(self.sample_number))
+
         self.logger.info('error number: {}'.format(self.error_number))
         return np.array(all_vector), np.zeros(len(all_vector)), np.array(all_buggy_patched), incorrect_number
 
@@ -202,29 +216,26 @@ class Feature:
         correct_number = 0
         all_vector = []
         all_buggy_patched = []
-        for i in range(3):
+        for i in range(len(patches)):
             patch = patches[i]
             engineering = engineerings[i]
             for root, dirs, files in os.walk(patch):
-                if len(files) == 3:
-                    flag = False
-                    for file in files:
-                        if file.endswith('.patch'):
-                            # embedding = [np.random.random_sample()]
-                            try:
-                                embedding, buggy_patched = self.embedding_feature(os.path.join(root, file),)
-                            except Exception as e:
-                                self.logger.debug(e)
-                                continue
-                            embedding = []
-                            flag = True
-                            break
-                    if not flag:
+                for file in files:
+                    if not file.endswith('.patch'):
                         continue
-                    subPath = root.replace(patch,'')
+                    # embedding = [np.random.random_sample()]
+                    try:
+                        embedding, buggy_patched = self.embedding_feature(os.path.join(root, file),)
+                    except Exception as e:
+                        self.logger.error(e)
+                        continue
+
+                    # if self.fea != 'embeddings':
+                    subPath = root.replace(patch, '')
                     bugName = subPath.split('/')[1]
                     engineeringName = 'P4Jfeatures_' + bugName + '.json'
                     engineering_path = os.path.join(engineering, engineeringName)
+
                     try:
                         with open(engineering_path, 'r+') as jfile:
                             dict = json.load(jfile)
@@ -234,17 +245,26 @@ class Feature:
                             engineering_features_list = [float(value) for key, value in engineering_features_dict_sorted]
                             if engineering_features_list == []:
                                 continue
-                            # vector = [label] + engineering_features_list + embedding
-                            vector = engineering_features_list + embedding
-                            all_vector.append(vector)
-                            all_buggy_patched.append([buggy_patched])
-                            correct_number += 1
-                            self.sample_number += 1
-                            self.logger.info('sample number: {}'.format(self.sample_number))
                     except Exception as e:
                         self.error_number += 1
-                else:
-                    pass
+
+                        # keep the same number of dataset with embeddings
+                        continue
+
+                    # separate or combine
+                    if self.fea == 'embeddings':
+                        vector = embedding
+                    elif self.fea == 'engineerings':
+                        vector = engineering_features_list
+                    elif self.fea == 'combinings':
+                        vector = engineering_features_list + embedding
+
+                    all_vector.append(vector)
+                    all_buggy_patched.append([buggy_patched])
+                    correct_number += 1
+                    self.sample_number += 1
+                    self.logger.info('sample number: {}'.format(self.sample_number))
+
         self.logger.info('error number: {}'.format(self.error_number))
         return np.array(all_vector), np.ones(len(all_vector)), np.array(all_buggy_patched), correct_number
 
@@ -258,13 +278,13 @@ if __name__ == '__main__':
     incorrect_engineerings = cfg.incorrect_engineering_features
 
     w2v = 'bert'
-    f = Feature(w2v)
-
+    fea = 'engineerings'
+    f = Feature(fea, w2v)
 
     # init
-    dataset_correct, labels_correct, correct_nubmer = f.feature_obtain_correct_sample(correct_patches, correct_engineerings, w2v)
+    dataset_correct, labels_correct, buggy_patched_correct, correct_nubmer = f.feature_obtain_correct_sample(correct_patches, correct_engineerings, )
 
     # add dataset feature
-    dataset_incorrect, labels_incorrcet, incorrect_number = f.feature_obtain_incorrect_sample(incorrect_patches, incorrect_engineerings)
+    dataset_incorrect, labels_incorrcet, buggy_patched_incorrect, incorrect_number = f.feature_obtain_incorrect_sample(incorrect_patches, incorrect_engineerings)
 
 

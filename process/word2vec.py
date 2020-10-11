@@ -8,6 +8,8 @@ class W2v:
             self.w2v = self.Bert1()
         elif w2vName == 'doc':
             self.w2v = self.Doc1()
+        elif w2vName == None:
+            self.w2v = None
         else:
             raise NameError('wrong name')
 

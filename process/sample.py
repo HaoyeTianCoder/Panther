@@ -10,6 +10,9 @@ class Sample:
         self.buggy_patched = None
 
     def add_data(self,new_data, new_labels, new_buggy_patched):
+        if not new_data.any():
+            print('Null new dataset')
+            raise
         self.dataset = np.concatenate((self.dataset, new_data), axis=0)
         self.labels = np.concatenate((self.labels, new_labels))
         self.buggy_patched = np.concatenate((self.buggy_patched, new_buggy_patched), axis=0)
