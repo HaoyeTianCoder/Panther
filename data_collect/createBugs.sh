@@ -24,7 +24,7 @@ do
 done
 
 proj=Mockito
-for bugId in $(seq 1 33)
+for bugId in $(seq 1 38)
 do
         defects4j checkout -p $proj -v ${bugId}b -w ${dir}${proj}_${bugId}
 done
