@@ -2,6 +2,10 @@ from config_default import *
 import os, shutil
 from subprocess import *
 
+kui_tools = ['AVATAR', 'FixMiner', 'TBar', 'kPAR']
+J_projects = ['jKali', 'jMutRepair', 'Cardumen']
+A_projects = ['GenProgA', 'KaliA', 'RSRepairA']
+
 def extract_source_file(defects4j_buggy, path_patch, tools):
     for tool in tools:
         patch_tool = os.path.join(path_patch,tool)
@@ -83,13 +87,31 @@ def extract4ssFix2():
 def obtain_buggy(root, file, project, id, path_target_buggy, tool):
     # obtain buggy file
     path_buggy_file = ''
-    with open(os.path.join(root, file), 'r+') as f:
-        for line in f:
-            if line.startswith('++'):
-                path_buggy_file = line.split(' ')[1].strip()
-                if tool == 'DeepRepair':
-                    path_buggy_file = path_buggy_file.replace('//','/')
-                break
+
+    if tool in J_projects:
+        with open(os.path.join(root, file), 'r+') as f:
+            for line in f:
+                if line.startswith('++'):
+                        path_line = line.split(' ')[1].strip()
+                        discrete = path_line.split('/')
+                        path_buggy_file = '/' + '/'.join(discrete[3:])
+                        path_buggy_file = path_buggy_file[:-4] + '.java'
+    else:
+        with open(os.path.join(root, file), 'r+') as f:
+            for line in f:
+                if line.startswith('--'):
+                    if tool in kui_tools:
+                        path_buggy_file = line.split(' ')[1].strip()[1:]
+                    elif tool in A_projects:
+                        path_line = line.split(' ')[1].strip()
+                        path_line = path_line.split('\t')[0]
+                        discrete = path_line.split('/')
+                        path_buggy_file = '/' + '/'.join(discrete[3:])
+                    else:
+                        path_buggy_file = line.split(' ')[1].strip()
+                    if tool == 'DeepRepair':
+                        path_buggy_file = path_buggy_file.replace('//','/')
+                    break
     if path_buggy_file == '':
         raise
     bug_id = project + '_' + id
@@ -132,6 +154,7 @@ def parse_patch(root, file, project, id, tool):
         for line in f:
             # exclude specific extra line
             if line.startswith('\ No newline at end of file') or line.startswith('Common subdirectories'):
+                    # or line.startswith('diff') or line.startswith('index'):
                 continue
             if line == '\n':
                 if tool == 'PraPR':
@@ -202,6 +225,10 @@ def obtain_fixed(root, file, project, id, fix_operation, path_target):
         fixed_final_file = f.readlines()
         for i in range(len(fix_operation)):
             bug_location_line, buggy_lines, fixed_chunk = fix_operation[i][0], fix_operation[i][1], fix_operation[i][2]
+
+            # handle extra space at the end of chunk
+            while fixed_chunk[-1] == '\n' and fixed_chunk[-2].endswith('\n'):
+                del fixed_chunk[-1]
 
             # handle different project
             pass
@@ -354,4 +381,16 @@ if __name__ == '__main__':
 
     # extract4normal(tool = 'SketchFix')
 
-    extract4normal(tool = 'SOFix')
+    # extract4normal(tool = 'SOFix')
+
+    # kui's tools
+    # for tool in kui_tools:
+    #     extract4normal(tool = tool)
+
+    # J projects
+    # for tool in J_projects:
+    #     extract4normal(tool = tool)
+
+    # A projects
+    # for tool in A_projects:
+    #     extract4normal(tool=tool)
