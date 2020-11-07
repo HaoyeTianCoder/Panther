@@ -2,7 +2,7 @@ from config_default import *
 import os, shutil
 from subprocess import *
 
-kui_tools = ['AVATAR', 'FixMiner', 'TBar', 'kPAR']
+kui_tools = ['AVATAR', 'FixMiner', 'TBar', 'kPAR','iFixR']
 J_projects = ['jKali', 'jMutRepair', 'Cardumen']
 A_projects = ['GenProgA', 'KaliA', 'RSRepairA']
 
@@ -394,3 +394,5 @@ if __name__ == '__main__':
     # A projects
     # for tool in A_projects:
     #     extract4normal(tool=tool)
+
+    extract4normal(tool='iFixR')
