@@ -4,7 +4,7 @@ from subprocess import *
 
 kui_tools = ['AVATAR', 'FixMiner', 'TBar', 'kPAR','iFixR']
 J_projects = ['jKali', 'jMutRepair', 'Cardumen']
-A_projects = ['GenProgA', 'KaliA', 'RSRepairA']
+A_projects = ['GenProgA', 'KaliA', 'RSRepairA','DynaMoth']
 
 def extract_source_file(defects4j_buggy, path_patch, tools):
     for tool in tools:
@@ -395,4 +395,4 @@ if __name__ == '__main__':
     # for tool in A_projects:
     #     extract4normal(tool=tool)
 
-    extract4normal(tool='iFixR')
+    # extract4normal(tool='iFixR')
