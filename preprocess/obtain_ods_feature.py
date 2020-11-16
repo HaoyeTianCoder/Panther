@@ -28,7 +28,8 @@ def prepare_legal_file(path):
                 shutil.copy(os.path.join(root, old_fixed), os.path.join(new_path, new_fixed))
 
 def obtain_ods_features(path):
-    cnt = 0
+    total = 2051
+    generated = 0
     for root, dirs, files in os.walk(path):
         for file in files:
             if file.endswith('.patch'):
@@ -39,6 +40,7 @@ def obtain_ods_features(path):
 
                 feature_name = 'features_' + buggy + '->' + fixed + '.json'
                 if os.path.exists(os.path.join(root, feature_name)):
+                    generated += 1
                     continue
 
                 cmd = 'java -classpath /Users/haoye.tian/Documents/University/project/coming_tian/' \
@@ -50,11 +52,15 @@ def obtain_ods_features(path):
                         # print(output)
                         # if errors:
                         #     raise CalledProcessError(errors, '-1')
+                        if output == '' or 'error' in errors or 'ERROR' in errors:
+                            print('error')
+                            continue
                 except Exception as e:
                     print(e)
-                    raise
-                cnt += 1
-                print('{} success: {}'.format(cnt, name))
+                    continue
+                generated += 1
+                print('generated: {}, new:{}'.format(generated, name))
+    print('total: {}, generated: {}'.format(total, generated))
 
 
 # prepare_legal_file(path)
