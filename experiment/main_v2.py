@@ -1,7 +1,7 @@
-from config_default_new import *
+from config_default_v2 import *
 from common import preprocess, feature_extract, sample
 from experiment import predict_cv
-from preprocess import deduplicate, obtain_ods_feature
+from preprocess import deduplicate, obtain_ods_feature, save_feature
 
 class Experiment:
     def __init__(self, fea, data_path, label_path, embedding_length, algrithom, w2v=None):
@@ -52,6 +52,7 @@ if __name__ == '__main__':
     cfg = Config()
     path_dataset = cfg.path_dataset
     dataset_name = cfg.dataset_name
+    w2v = cfg.wcv
 
     task = 'save_feature'
     print('task: {}'.format(task))
@@ -64,7 +65,9 @@ if __name__ == '__main__':
     elif task == 'ods_feature':
         obtain_ods_feature.obtain_ods_features(path_dataset)
     elif task == 'save_feature':
-        
+        other = 'ods'
+        save_feature.save_features(path_dataset, w2v, other)
+
 
         
         

@@ -3,8 +3,6 @@ import shutil
 from subprocess import *
 from nltk.tokenize import word_tokenize
 
-path = '/Users/haoye.tian/Documents/University/data/PatchCollecting/'
-
 
 def prepare_legal_file(path):
     for root, dirs, files in os.walk(path):
@@ -36,6 +34,9 @@ def deduplicate_by_content_with_location(dataset_name, path_dataset):
     for root, dirs, files in os.walk(path_dataset):
         for file in files:
             if file.endswith('.patch'):
+                # unlabeled
+                if 'iFixR' in root:
+                    continue
                 path_patch = os.path.join(root, file)
                 unique_str = ''
                 pre += 1
@@ -99,6 +100,9 @@ def deduplicate_by_token_with_location(dataset_name, path_dataset):
     for root, dirs, files in os.walk(path_dataset):
         for file in files:
             if file.endswith('.patch'):
+                # unlabeled
+                if 'iFixR' in root:
+                    continue
                 path_patch = os.path.join(root, file)
                 unique_str = ''
                 pre += 1
@@ -154,12 +158,15 @@ def deduplicate_by_token_with_location(dataset_name, path_dataset):
     return new_dataset_path, new_dataset_name
 
 if __name__ == '__main__':
-    # path = '/Users/haoye.tian/Documents/University/data/PatchCollecting/'
+    path = '/Users/haoye.tian/Documents/University/data/PatchCollecting/'
+    prepare_legal_file(path)
+
     # v2 contains ods feature
     dataset_name = 'PatchCollectingV2'
     path_dataset = '/Users/haoye.tian/Documents/University/data/PatchCollectingV2/'
+
     # by content with location number
     # deduplicate_by_content_with_location(path2)
 
     # by token content with location number
-    deduplicate_by_token_with_location(dataset_name, path_dataset)
+    # deduplicate_by_token_with_location(dataset_name, path_dataset)
