@@ -3,15 +3,37 @@ import shutil
 from subprocess import *
 from nltk.tokenize import word_tokenize
 
-
 path = '/Users/haoye.tian/Documents/University/data/PatchCollecting/'
-# v2 contains ods feature
-path2 = '/Users/haoye.tian/Documents/University/data/PatchCollectingV2/'
 
-def deduplicate_by_content_with_location(path):
+
+def prepare_legal_file(path):
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if file.endswith('.patch'):
+                name = file.split('.')[0]
+
+                new_path = root.replace('PatchCollecting','PatchCollectingV2')
+                if not os.path.exists(new_path):
+                    os.makedirs(new_path)
+
+                old_patch = new_patch = file
+
+                old_buggy = name + '.buggy'
+                old_fixed = name + '.fixed'
+
+                new_buggy = name + '-s.java'
+                new_fixed = name + '-t.java'
+
+                shutil.copy(os.path.join(root, old_patch), os.path.join(new_path, new_patch))
+                shutil.copy(os.path.join(root, old_buggy), os.path.join(new_path, new_buggy))
+                shutil.copy(os.path.join(root, old_fixed), os.path.join(new_path, new_fixed))
+
+def deduplicate_by_content_with_location(dataset_name, path_dataset):
+    new_dataset_name = dataset_name + 'UniqueNormal'
+    new_dataset_path = path_dataset.replace(dataset_name, new_dataset_name)
     unique_dict = {}
     pre = exception = post = repeat = 0
-    for root, dirs, files in os.walk(path):
+    for root, dirs, files in os.walk(path_dataset):
         for file in files:
             if file.endswith('.patch'):
                 path_patch = os.path.join(root, file)
@@ -48,7 +70,7 @@ def deduplicate_by_content_with_location(path):
 
                     # copy unique to another folder
                     name = file.split('.')[0]
-                    new_path = root.replace('PatchCollectingV2', 'PatchCollectingV2Unique')
+                    new_path = root.replace(dataset_name, new_dataset_name)
                     if not os.path.exists(new_path):
                         os.makedirs(new_path)
 
@@ -66,12 +88,15 @@ def deduplicate_by_content_with_location(path):
                     post += 1
 
     print('pre:{}, post:{} ---- exception:{}, repeat:{}'.format(pre, post, exception, repeat))
+    return new_dataset_path, new_dataset_name
 
 
-def deduplicate_by_token_with_location(path):
+def deduplicate_by_token_with_location(dataset_name, path_dataset):
+    new_dataset_name = dataset_name + 'UniqueToken'
+    new_dataset_path = path_dataset.replace(dataset_name, new_dataset_name)
     unique_dict = {}
     pre = exception = post = repeat = 0
-    for root, dirs, files in os.walk(path):
+    for root, dirs, files in os.walk(path_dataset):
         for file in files:
             if file.endswith('.patch'):
                 path_patch = os.path.join(root, file)
@@ -108,7 +133,7 @@ def deduplicate_by_token_with_location(path):
 
                     # copy unique to another folder
                     name = file.split('.')[0]
-                    new_path = root.replace('PatchCollectingV2', 'PatchCollectingV2UniqueToken')
+                    new_path = root.replace(dataset_name, new_dataset_name)
                     if not os.path.exists(new_path):
                         os.makedirs(new_path)
 
@@ -126,11 +151,15 @@ def deduplicate_by_token_with_location(path):
                     post += 1
 
     print('pre:{}, post:{} ---- exception:{}, repeat:{}'.format(pre, post, exception, repeat))
+    return new_dataset_path, new_dataset_name
 
 if __name__ == '__main__':
-
+    # path = '/Users/haoye.tian/Documents/University/data/PatchCollecting/'
+    # v2 contains ods feature
+    dataset_name = 'PatchCollectingV2'
+    path_dataset = '/Users/haoye.tian/Documents/University/data/PatchCollectingV2/'
     # by content with location number
     # deduplicate_by_content_with_location(path2)
 
     # by token content with location number
-    deduplicate_by_token_with_location(path2)
+    deduplicate_by_token_with_location(dataset_name, path_dataset)

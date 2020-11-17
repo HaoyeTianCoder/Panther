@@ -5,7 +5,7 @@ import json
 import numpy as np
 # m = BertClient(check_length=False)
 from nltk.tokenize import word_tokenize
-from process import word2vec
+from common import word2vec
 from sklearn.metrics.pairwise import *
 import re
 
