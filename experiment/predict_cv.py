@@ -23,10 +23,10 @@ class Prediction:
         auc_ = auc(fpr, tpr)
 
         y_pred = [1 if p >= 0.5 else 0 for p in y_pred_prob]
-        acc = accuracy_score(y_true=y_true, y_pred=y_pred)
-        prc = precision_score(y_true=y_true, y_pred=y_pred)
-        rc = recall_score(y_true=y_true, y_pred=y_pred)
-        f1 = 2 * prc * rc / (prc + rc)
+        # acc = accuracy_score(y_true=y_true, y_pred=y_pred)
+        # prc = precision_score(y_true=y_true, y_pred=y_pred)
+        # rc = recall_score(y_true=y_true, y_pred=y_pred)
+        # f1 = 2 * prc * rc / (prc + rc)
 
         tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
         recall_p =  tp / (tp + fn)
