@@ -76,9 +76,9 @@ def save_features(path_dataset, w2v, other):
                 print('process {}/{}, patch name: {}'.format(cnt, total, patch))
 
     # save
-    path_learned_features = '../data/' + 'dataset_learned_' + w2v + '.npy'
-    path_engineered_features = '../data/' + 'dataset_engineered_' + other + '.npy'
-    path_labels = '../data/dataset_labels.npy'
+    path_learned_features = '../data_vector/' + 'learned_' + w2v + '.npy'
+    path_engineered_features = '../data_vector/' + 'engineered_' + other + '.npy'
+    path_labels = '../data_vector/labels.npy'
     np.save(path_learned_features, all_learned_vector)
     np.save(path_engineered_features, all_engineered_vector)
     np.save(path_labels, all_label)

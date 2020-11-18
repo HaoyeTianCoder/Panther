@@ -25,7 +25,7 @@ class Experiment:
     def load_combine_data(self, ):
         # load data
         if not os.path.exists(self.path_learned_feature) or not os.path.exists(self.path_engineered_feature) or not os.path.exists(self.path_labels):
-            logging.info('path of datset missing ......')
+            logging.info('miss the path of the datset ......')
             raise 
         print('------------------------------------')
         print('Loading dataset:')
@@ -85,8 +85,10 @@ class Experiment:
 
 
     def save_result(self):
-
-        out_path = '../result/'+ self.fea_used + '.result'
+        out_foler = '../result/'
+        if not os.path.exists(out_foler):
+            os.makedirs(out_foler)
+        out_path = out_foler + self.fea_used + '.result'
         with open(out_path,'w+') as file:
             file.write(self.result)
 
@@ -118,9 +120,9 @@ if __name__ == '__main__':
 
     elif task == 'experiment':
         # start experiment
-        path_learned_feature = '../data/dataset_learned_Bert.npy'
-        path_engineered_feature = '../data/dataset_engineered_ods.npy'
-        path_labels = '../data/dataset_labels.npy'
+        path_learned_feature = '../data_vector/learned_Bert.npy'
+        path_engineered_feature = '../data_vector/engineered_ods.npy'
+        path_labels = '../data_vector/labels.npy'
 
         split_method = 'cvfold'
         algorithm = 'lr'
