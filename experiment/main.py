@@ -4,11 +4,11 @@ from experiment import predict_cv
 from preprocess import deduplicate, obtain_ods_feature, save_feature
 
 class Experiment:
-    def __init__(self, fea_used, path_learned_feature, path_engineered_feature, path_labels, split_method, algrithom, combine_method=None):
+    def __init__(self, fea_used, path_learned_feature, path_engineered_feature, path_labels, split_method, algorithm, combine_method=None):
         self.fea_used = fea_used
         self.combine_method = combine_method
         self.split_method = split_method
-        self.algrithom = algrithom
+        self.algorithm = algorithm
         self.feature1_length = None
         self.result = None
 
@@ -27,19 +27,22 @@ class Experiment:
         if not os.path.exists(self.path_learned_feature) or not os.path.exists(self.path_engineered_feature) or not os.path.exists(self.path_labels):
             logging.info('path of datset missing ......')
             raise 
-        
-        print('loading dataset ---------------')
+        print('------------------------------------')
+        print('Loading dataset:')
         
         if fea_used == 'learned':
             self.dataset = np.load(self.path_learned_feature)
         elif fea_used == 'engineered':
             self.dataset = np.load(self.path_engineered_feature)
         elif fea_used == 'combine':
+            self.combine_feature(self.path_learned_feature, self.path_engineered_feature)
             if combine_method == 'normal':
-                self.combine_feature(self.path_learned_feature, self.path_engineered_feature)
+                pass
+            if combine_method == 'weight':
+                self.algorithm = 'lr_rf'
         
         self.labels = np.load(self.path_labels)
-        print('total number: {}, correct number: {}, incorrect number: {}'.format(len(list(self.labels)), list(self.labels).count(1), list(self.labels).count(0)))
+        print('Total number: {}. Correct number: {}. Incorrect number: {}'.format(len(list(self.labels)), list(self.labels).count(1), list(self.labels).count(0)))
 
     def combine_feature(self, path_learned_feature, path_engineered_feature):
         learned_feature = np.load(path_learned_feature)
@@ -53,7 +56,7 @@ class Experiment:
     def train_predict(self, ):
         split_method = self.split_method
         # train and predict
-        pd = predict_cv.Prediction(self.dataset, self.labels, self.feature1_length, self.algrithom, split_method, 10)
+        pd = predict_cv.Prediction(self.dataset, self.labels, self.feature1_length, self.algorithm, split_method, 10)
 
         if split_method == 'cvfold':
             output = pd.run_cvfold()
@@ -70,6 +73,11 @@ class Experiment:
         self.load_combine_data()
 
         # split, train, predict
+        print('------------------------------------')
+        print('Experiment design: ')
+        print('Feature used: {}. Combine_method: {}. ML_algorithm: {}'.format(self.fea_used, self.combine_method, self.algorithm))
+        print('------------------------------------')
+        print('Result: ')
         self.train_predict()
 
         # save result
@@ -89,7 +97,7 @@ if __name__ == '__main__':
     w2v = cfg.wcv
 
     task = 'experiment'
-    print('task: {}'.format(task))
+    print('TASK: {}'.format(task))
 
     if task == 'deduplicate':
         # drop same patch
@@ -114,14 +122,17 @@ if __name__ == '__main__':
         path_labels = '../data/dataset_labels.npy'
 
         split_method = 'cvfold'
-        combine_method = 'normal'
-        algrithom = 'lr_rf'
+        algorithm = 'lr'
 
-        fea_used = 'combine'
         # fea_used = 'learned'
         # fea_used = 'engineered'
 
-        e = Experiment(fea_used, path_learned_feature, path_engineered_feature, path_labels, split_method, algrithom, combine_method )
+        # combine
+        fea_used = 'combine'
+        combine_method = 'normal'
+        # combine_method = 'weight'
+
+        e = Experiment(fea_used, path_learned_feature, path_engineered_feature, path_labels, split_method, algorithm, combine_method )
         e.run()
 
         

@@ -86,7 +86,9 @@ class Prediction:
         # print('------------------------------------------------------------------------')
         # print('{}-fold cross validation'.format(self.kfold))
         # print('Accuracy: {} -- Precision: {} -- +Recall: {} -- F1: {} -- AUC: {}'.format(np.array(accs).mean(), np.array(prcs).mean(), np.array(rcs).mean(), np.array(f1s).mean(), np.array(aucs).mean()))
-        # print('AUC: {:.3f}, +Recall: {:.3f}, -Recall: {:.3f}'.format(np.array(aucs).mean(), np.array(rcs_p).mean(), np.array(rcs_n).mean()))
+        print('')
+        print('{}-fold cross validation mean: '.format(self.kfold))
+        print('AUC: {:.3f}, +Recall: {:.3f}, -Recall: {:.3f}'.format(np.array(aucs).mean(), np.array(rcs_p).mean(), np.array(rcs_n).mean()))
 
         output = '------------------------------------------------------------------------\n'
         output += '{}-fold cross validation\n'.format(self.kfold)
@@ -124,8 +126,8 @@ class Prediction:
             elif self.algorithm == 'rf':
                 clf = RandomForestClassifier(class_weight={1: 1}, n_estimators=1000).fit(X=x_train, y=y_train)
             elif self.algorithm == 'lr_rf':
-                x_train_lr = x_train[:,self.feature1_length:]
-                x_train_rf = x_train[:,:self.feature1_length]
+                x_train_lr = x_train[:,:self.feature1_length:]
+                x_train_rf = x_train[:,self.feature1_length:]
 
                 lr = LogisticRegression(solver='lbfgs', max_iter=10000).fit(X=x_train_lr, y=y_train)
                 rf = RandomForestClassifier(class_weight={1: 1}, n_estimators=1000).fit(X=x_train_rf, y=y_train)
@@ -133,8 +135,8 @@ class Prediction:
 
             # prediction
             if self.algorithm == 'lr_rf':
-                x_test_lr = x_test[:,self.feature1_length:]
-                x_test_rf = x_test[:,:self.feature1_length]
+                x_test_lr = x_test[:,:self.feature1_length]
+                x_test_rf = x_test[:,self.feature1_length:]
 
                 y_pred_lr = lr.predict_proba(x_test_lr)[:, 1]
                 y_pred_rf = rf.predict_proba(x_test_rf)[:, 1]
@@ -158,7 +160,8 @@ class Prediction:
         # print('------------------------------------------------------------------------')
         # print('{}-fold cross validation'.format(self.kfold))
         # print('Accuracy: {} -- Precision: {} -- +Recall: {} -- F1: {} -- AUC: {}'.format(np.array(accs).mean(), np.array(prcs).mean(), np.array(rcs).mean(), np.array(f1s).mean(), np.array(aucs).mean()))
-        # print('AUC: {:.3f}, +Recall: {:.3f}, -Recall: {:.3f}'.format(np.array(aucs).mean(), np.array(rcs_p).mean(), np.array(rcs_n).mean()))
+        print('')
+        print('{}-fold cross validation mean: '.format(self.kfold))
 
         output = '------------------------------------------------------------------------\n'
         output += '{}-time slice validation\n'.format(self.kfold)
