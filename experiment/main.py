@@ -85,6 +85,7 @@ class Experiment:
 
 
     def save_result(self):
+
         out_path = '../result/'+ self.fea_used + '.result'
         with open(out_path,'w+') as file:
             file.write(self.result)
@@ -129,8 +130,8 @@ if __name__ == '__main__':
 
         # combine
         fea_used = 'combine'
-        combine_method = 'normal'
-        # combine_method = 'weight'
+        # combine_method = 'normal'
+        combine_method = 'weight'
 
         e = Experiment(fea_used, path_learned_feature, path_engineered_feature, path_labels, split_method, algorithm, combine_method )
         e.run()

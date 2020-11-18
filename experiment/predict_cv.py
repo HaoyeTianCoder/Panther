@@ -54,7 +54,7 @@ class Prediction:
             elif self.algorithm == 'rf':
                 clf = RandomForestClassifier(class_weight={1: 1}, n_estimators=1000).fit(X=x_train, y=y_train)
             elif self.algorithm == 'lr_rf':
-                x_train_lr = x_train[:,:self.feature1_length:]
+                x_train_lr = x_train[:,:self.feature1_length]
                 x_train_rf = x_train[:,self.feature1_length:]
 
                 lr = LogisticRegression(solver='lbfgs', max_iter=10000).fit(X=x_train_lr, y=y_train)
@@ -62,7 +62,7 @@ class Prediction:
 
             # prediction
             if self.algorithm == 'lr_rf':
-                x_test_lr = x_test[:,:self.feature1_length:]
+                x_test_lr = x_test[:,:self.feature1_length]
                 x_test_rf = x_test[:,self.feature1_length:]
 
                 y_pred_lr = lr.predict_proba(x_test_lr)[:, 1]
@@ -126,7 +126,7 @@ class Prediction:
             elif self.algorithm == 'rf':
                 clf = RandomForestClassifier(class_weight={1: 1}, n_estimators=1000).fit(X=x_train, y=y_train)
             elif self.algorithm == 'lr_rf':
-                x_train_lr = x_train[:,:self.feature1_length:]
+                x_train_lr = x_train[:,:self.feature1_length]
                 x_train_rf = x_train[:,self.feature1_length:]
 
                 lr = LogisticRegression(solver='lbfgs', max_iter=10000).fit(X=x_train_lr, y=y_train)
