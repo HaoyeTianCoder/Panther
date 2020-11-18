@@ -1,4 +1,4 @@
-from config_default import *
+from config_default_old import *
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.preprocessing import StandardScaler,MinMaxScaler
 from sklearn.linear_model import LogisticRegression
@@ -10,13 +10,13 @@ import random
 from sklearn.model_selection import train_test_split
 
 class Prediction:
-    def __init__(self, dataset, labels, embedding_length, algorithm, split_method, kfold=10, ):
+    def __init__(self, dataset, labels, feature1_length, algorithm, split_method, kfold=10, ):
         self.dataset = dataset
         self.labels = labels
         self.algorithm = algorithm
         self.split_method = split_method
         self.kfold = kfold
-        self.embedding_length = embedding_length
+        self.feature1_length = feature1_length
 
     def evaluation_metrics(self, y_true, y_pred_prob):
         fpr, tpr, thresholds = roc_curve(y_true=y_true, y_score=y_pred_prob, pos_label=1)
@@ -54,17 +54,16 @@ class Prediction:
             elif self.algorithm == 'rf':
                 clf = RandomForestClassifier(class_weight={1: 1}, n_estimators=1000).fit(X=x_train, y=y_train)
             elif self.algorithm == 'lr_rf':
-                x_train_lr = x_train[:,self.embedding_length:]
-                x_train_rf = x_train[:,:self.embedding_length]
+                x_train_lr = x_train[:,:self.feature1_length:]
+                x_train_rf = x_train[:,self.feature1_length:]
 
                 lr = LogisticRegression(solver='lbfgs', max_iter=10000).fit(X=x_train_lr, y=y_train)
                 rf = RandomForestClassifier(class_weight={1: 1}, n_estimators=1000).fit(X=x_train_rf, y=y_train)
 
-
             # prediction
             if self.algorithm == 'lr_rf':
-                x_test_lr = x_test[:,self.embedding_length:]
-                x_test_rf = x_test[:,:self.embedding_length]
+                x_test_lr = x_test[:,:self.feature1_length:]
+                x_test_rf = x_test[:,self.feature1_length:]
 
                 y_pred_lr = lr.predict_proba(x_test_lr)[:, 1]
                 y_pred_rf = rf.predict_proba(x_test_rf)[:, 1]
@@ -125,8 +124,8 @@ class Prediction:
             elif self.algorithm == 'rf':
                 clf = RandomForestClassifier(class_weight={1: 1}, n_estimators=1000).fit(X=x_train, y=y_train)
             elif self.algorithm == 'lr_rf':
-                x_train_lr = x_train[:,self.embedding_length:]
-                x_train_rf = x_train[:,:self.embedding_length]
+                x_train_lr = x_train[:,self.feature1_length:]
+                x_train_rf = x_train[:,:self.feature1_length]
 
                 lr = LogisticRegression(solver='lbfgs', max_iter=10000).fit(X=x_train_lr, y=y_train)
                 rf = RandomForestClassifier(class_weight={1: 1}, n_estimators=1000).fit(X=x_train_rf, y=y_train)
@@ -134,8 +133,8 @@ class Prediction:
 
             # prediction
             if self.algorithm == 'lr_rf':
-                x_test_lr = x_test[:,self.embedding_length:]
-                x_test_rf = x_test[:,:self.embedding_length]
+                x_test_lr = x_test[:,self.feature1_length:]
+                x_test_rf = x_test[:,:self.feature1_length]
 
                 y_pred_lr = lr.predict_proba(x_test_lr)[:, 1]
                 y_pred_rf = rf.predict_proba(x_test_rf)[:, 1]

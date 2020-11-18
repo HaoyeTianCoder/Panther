@@ -1,4 +1,4 @@
-from config_default import *
+from config_default_old import *
 
 class Sample:
     def __init__(self):

@@ -1,5 +1,5 @@
 import os
-from config_default import *
+from config_default_old import *
 from bert_serving.client import BertClient
 import json
 import numpy as np

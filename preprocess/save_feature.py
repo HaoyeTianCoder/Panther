@@ -22,8 +22,11 @@ def engineered_features(path_json):
                 value = list(dict_fea.values())[0]
                 engineered_vector.append(value)
     except Exception as e:
-        print('exception: {}, name: {}'.format(e, path_json))
+        print('name: {}, exception: {}'.format(path_json, e))
         return []
+    finally:
+        if engineered_vector == []:
+            print('name: {}, exception: {}'.format(path_json, 'null feature'))
 
     return engineered_vector
 
@@ -50,7 +53,6 @@ def save_features(path_dataset, w2v, other):
                 else:
                     print('unknow label: {}'.format(name))
                     continue
-                all_label.append(label)
 
                 path_patch = os.path.join(root, patch)
 
@@ -65,8 +67,10 @@ def save_features(path_dataset, w2v, other):
 
                 if learned_vector == [] or engineered_vector == []:
                     continue
+
                 all_learned_vector.append(learned_vector)
                 all_engineered_vector.append(engineered_vector)
+                all_label.append(label)
 
                 cnt += 1
                 print('process {}/{}, patch name: {}'.format(cnt, total, patch))
@@ -84,14 +88,18 @@ def learned_feature(path_patch, w2v):
         bugy_all = get_diff_files_frag(path_patch, type='patched')
         patched_all = get_diff_files_frag(path_patch, type='buggy')
     except Exception as e:
-        print('exception: {}, name: {}'.format(e,path_patch))
+        print('name: {}, exception: {}'.format(path_patch, e))
         return []
 
     # tokenize word
     bugy_all_token = word_tokenize(bugy_all)
     patched_all_token = word_tokenize(patched_all)
 
-    bug_vec, patched_vec = output_vec(w2v, bugy_all_token, patched_all_token)
+    try:
+        bug_vec, patched_vec = output_vec(w2v, bugy_all_token, patched_all_token)
+    except Exception as e:
+        print('name: {}, exception: {}'.format(path_patch, e))
+        return []
 
     bug_vec = bug_vec.reshape((1, -1))
     patched_vec = patched_vec.reshape((1, -1))
@@ -124,6 +132,7 @@ def multi_diff_features(buggy, patched):
     return subtract, multiple, cos, euc
 
 def output_vec(w2v, bugy_all_token, patched_all_token):
+
     if w2v == 'Bert':
         m = BertClient(check_length=False)
         bug_vec = m.encode([bugy_all_token], is_tokenized=True)

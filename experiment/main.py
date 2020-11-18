@@ -1,128 +1,129 @@
 from config_default import *
-from process import preprocess, feature_extract, sample
+from common import preprocess, feature_extract, sample
 from experiment import predict_cv
+from preprocess import deduplicate, obtain_ods_feature, save_feature
 
 class Experiment:
-    def __init__(self, fea, data_path, label_path, embedding_length, algrithom, w2v=None):
-        self.fea = fea
-        self.w2v = w2v
+    def __init__(self, fea_used, path_learned_feature, path_engineered_feature, path_labels, split_method, algrithom, combine_method=None):
+        self.fea_used = fea_used
+        self.combine_method = combine_method
+        self.split_method = split_method
         self.algrithom = algrithom
-        self.data_path = data_path
-        self.label_path = label_path
-        self.dataset = None
-        self.labels = None
+        self.feature1_length = None
         self.result = None
-        self.embedding_length = embedding_length
 
-    def get_features(self, ):
-        # w2v = 'bert'
-        # w2v = 'doc'
+        self.path_learned_feature = path_learned_feature
+        self.path_engineered_feature = path_engineered_feature
+        self.path_labels = path_labels
 
-        s = sample.Sample()
-        f = feature_extract.Feature(self.fea, self.w2v)
-
-        dataset_correct, labels_correct, all_buggy_patched_correct, correct_nubmer = f.feature_obtain_correct_sample(
-            correct_patches, correct_engineerings, )
-        s.dataset = dataset_correct
-        s.labels = labels_correct
-        s.buggy_patched = all_buggy_patched_correct
-
-        # add dataset
-        dataset_incorrect, labels_incorrcet, all_buggy_patched_incorrect, incorrect_number = f.feature_obtain_incorrect_sample(
-            incorrect_patches, incorrect_engineerings)
-        s.add_data(dataset_incorrect, labels_incorrcet, all_buggy_patched_incorrect)
-
-        # count
-        s.correct_nubmer = correct_nubmer
-        s.incorrect_number = incorrect_number
-        s.total_number = s.correct_nubmer + s.incorrect_number
-        print('total number: {}, correct number: {}. incorrect number: {}'.format(s.total_number, s.correct_nubmer, s.incorrect_number))
-
-        # deduplicate
-        print('Deduplicating ------------------')
-        s.deduplicate()
-
-        print('total number: {}, correct number: {}, incorrect number: {}'.format(s.total_number, s.correct_nubmer, s.incorrect_number))
-
-        # save data and label
-        np.save(self.data_path, s.dataset)
-        np.save(self.label_path, s.labels)
+        self.dataset = None
+        # self.learned_feature = None
+        # self.engineered_feature = None
+        self.label = None
+        # self.embedding_length = embedding_length
         
-    def load_data(self, ):
+    def load_combine_data(self, ):
         # load data
-        if not os.path.exists(self.data_path):
-            logging.info('calculating features ......')
-            self.get_features()
+        if not os.path.exists(self.path_learned_feature) or not os.path.exists(self.path_engineered_feature) or not os.path.exists(self.path_labels):
+            logging.info('path of datset missing ......')
+            raise 
+        
         print('loading dataset ---------------')
-        self.dataset = np.load(self.data_path)
-        self.labels = np.load(self.label_path)
+        
+        if fea_used == 'learned':
+            self.dataset = np.load(self.path_learned_feature)
+        elif fea_used == 'engineered':
+            self.dataset = np.load(self.path_engineered_feature)
+        elif fea_used == 'combine':
+            if combine_method == 'normal':
+                self.combine_feature(self.path_learned_feature, self.path_engineered_feature)
+        
+        self.labels = np.load(self.path_labels)
         print('total number: {}, correct number: {}, incorrect number: {}'.format(len(list(self.labels)), list(self.labels).count(1), list(self.labels).count(0)))
 
-    def train_predict(self, split_method):
+    def combine_feature(self, path_learned_feature, path_engineered_feature):
+        learned_feature = np.load(path_learned_feature)
+        engineered_feature = np.load(path_engineered_feature)
+
+        dataset = np.concatenate((learned_feature, engineered_feature),axis=1)
+
+        self.dataset = dataset
+        self.feature1_length = learned_feature.shape[1]
+
+    def train_predict(self, ):
+        split_method = self.split_method
         # train and predict
-        pd = predict_cv.Prediction(self.dataset, self.labels, self.embedding_length, self.algrithom, split_method, 10)
+        pd = predict_cv.Prediction(self.dataset, self.labels, self.feature1_length, self.algrithom, split_method, 10)
 
         if split_method == 'cvfold':
             output = pd.run_cvfold()
         elif split_method == 'slice':
             output = pd.run_slice()
+        else:
+            print('wrong split method')
+            raise
 
-        return output
+        self.result = output
 
-    def run(self, split_method):
-        print('fea: {}, w2v: {}, data_path: {}, label_path: {}'.format(self.fea, self.w2v, self.data_path, self.label_path))
-        self.load_data()
-        self.result = self.train_predict(split_method)
-        print(self.result)
+    def run(self, ):
+        # load single feature and decide whether combine
+        self.load_combine_data()
+
+        # split, train, predict
+        self.train_predict()
+
+        # save result
+        self.save_result()
+
 
     def save_result(self):
-        out_path = '../result/'+ self.fea + '_' + str(self.w2v) +'.result'
+        out_path = '../result/'+ self.fea_used + '.result'
         with open(out_path,'w+') as file:
             file.write(self.result)
 
 if __name__ == '__main__':
     # config
     cfg = Config()
-    correct_patches = cfg.correct_patches
-    correct_engineerings = cfg.correct_engineering_features
-    incorrect_patches = cfg.incorrect_patches
-    incorrect_engineerings = cfg.incorrect_engineering_features
+    path_dataset = cfg.path_dataset
+    dataset_name = cfg.dataset_name
+    w2v = cfg.wcv
 
-    # correct_patches = ['/Users/haoye.tian/Documents/University/data/Exp-2-data-deduplicate/correct-patches']
-    # incorrect_patches = ['/Users/haoye.tian/Documents/University/data/Exp-2-data-deduplicate/incorrect-patches']
+    task = 'experiment'
+    print('task: {}'.format(task))
 
-    exp_dict = {'embeddings': 'lr', 'engineerings': 'rf', 'combinings': 'lr_rf'}
-    feas = ['embeddings', 'engineerings', 'combinings']
+    if task == 'deduplicate':
+        # drop same patch
+        if 'Unique' in path_dataset:
+            print('already deduplicated!')
+        else:
+            path_dataset, dataset_name = deduplicate.deduplicate_by_token_with_location(dataset_name, path_dataset)
 
-    # hyper-parameter
-    fea = feas[2]
-    split_method = 'cvfold'
-    # split_method = 'slice'
-    algrithom = exp_dict[fea]
-    embedding_length = -2050
+    elif task == 'ods_feature':
+        # generate ods feature json under folder where patch is
+        obtain_ods_feature.obtain_ods_features(path_dataset)
 
-    data_path, label_path, w2v = None, None, None
-    if fea == 'embeddings':
-        w2v = 'bert'
-        data_path = '../data/dataset_'+ w2v +'.npy'
-        label_path = '../data/labels_'+ w2v +'.npy'
-    elif fea == 'engineerings':
-        data_path = '../data/dataset_engineerings.npy'
-        label_path = '../data/labels_engineerings.npy'
-    elif fea == 'combinings':
-        w2v = 'bert'
-        data_path = '../data/dataset_combinings_'+ w2v +'.npy'
-        label_path = '../data/labels_combinings_'+ w2v +'.npy'
-    else:
-        print('wrong type...')
+    elif task == 'save_feature':
+        # save learned feature and engineered feature to npy for prediction later
+        other = 'ods'
+        save_feature.save_features(path_dataset, w2v, other)
 
-    # data_path = '../data/dataset_embeddings_tmp.npy'
-    # label_path = '../data/labels_embeddings_tmp.npy'
+    elif task == 'experiment':
+        # start experiment
+        path_learned_feature = '../data/dataset_learned_Bert.npy'
+        path_engineered_feature = '../data/dataset_engineered_ods.npy'
+        path_labels = '../data/dataset_labels.npy'
 
-    # start experiment
-    e = Experiment(fea, data_path, label_path, embedding_length, algrithom, w2v,)
-    e.run(split_method)
-    e.save_result()
+        split_method = 'cvfold'
+        combine_method = 'normal'
+        algrithom = 'lr_rf'
+
+        fea_used = 'combine'
+        # fea_used = 'learned'
+        # fea_used = 'engineered'
+
+        e = Experiment(fea_used, path_learned_feature, path_engineered_feature, path_labels, split_method, algrithom, combine_method )
+        e.run()
+
         
         
 
