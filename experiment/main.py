@@ -10,7 +10,7 @@ class Experiment:
         self.split_method = split_method
         self.algorithm = algorithm
         self.feature1_length = None
-        self.result = None
+        self.result = ''
 
         self.path_learned_feature = path_learned_feature
         self.path_engineered_feature = path_engineered_feature
@@ -25,10 +25,10 @@ class Experiment:
     def load_combine_data(self, ):
         # load data
         if not os.path.exists(self.path_learned_feature) or not os.path.exists(self.path_engineered_feature) or not os.path.exists(self.path_labels):
-            logging.info('miss the path of the datset ......')
-            raise 
-        print('------------------------------------')
-        print('Loading dataset:')
+            # logging.info('miss the path of the datset ......')
+            raise Exception('miss the path of the datset ......')
+        output = '------------------------------------\n'
+        output += 'Loading dataset:\n'
         
         if fea_used == 'learned':
             self.dataset = np.load(self.path_learned_feature)
@@ -42,7 +42,10 @@ class Experiment:
                 self.algorithm = 'lr_rf'
         
         self.labels = np.load(self.path_labels)
-        print('Total number: {}. Correct number: {}. Incorrect number: {}'.format(len(list(self.labels)), list(self.labels).count(1), list(self.labels).count(0)))
+
+        output += 'Total number: {}. Correct number: {}. Incorrect number: {}\n'.format(len(list(self.labels)), list(self.labels).count(1), list(self.labels).count(0))
+        print(output, end='')
+        self.result += output
 
     def combine_feature(self, path_learned_feature, path_engineered_feature):
         learned_feature = np.load(path_learned_feature)
@@ -54,30 +57,34 @@ class Experiment:
         self.feature1_length = learned_feature.shape[1]
 
     def train_predict(self, ):
+        output1 = '------------------------------------\n'
+        output1 += 'Experiment design: \n'
+        output1 += 'Feature used: {}. Combine_method: {}. ML_algorithm: {}\n'.format(self.fea_used, self.combine_method, self.algorithm)
+        output1 += '------------------------------------\n'
+        output1 += 'Result: \n'
+
+        print(output1, end='')
+        self.result += output1
+
         split_method = self.split_method
         # train and predict
         pd = predict_cv.Prediction(self.dataset, self.labels, self.feature1_length, self.algorithm, split_method, 10)
 
         if split_method == 'cvfold':
-            output = pd.run_cvfold()
+            output2 = pd.run_cvfold()
         elif split_method == 'slice':
-            output = pd.run_slice()
+            output2 = pd.run_slice()
         else:
             print('wrong split method')
             raise
 
-        self.result = output
+        self.result += output2
 
     def run(self, ):
         # load single feature and decide whether combine
         self.load_combine_data()
 
         # split, train, predict
-        print('------------------------------------')
-        print('Experiment design: ')
-        print('Feature used: {}. Combine_method: {}. ML_algorithm: {}'.format(self.fea_used, self.combine_method, self.algorithm))
-        print('------------------------------------')
-        print('Result: ')
         self.train_predict()
 
         # save result

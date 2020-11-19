@@ -90,11 +90,11 @@ class Prediction:
         print('{}-fold cross validation mean: '.format(self.kfold))
         print('AUC: {:.3f}, +Recall: {:.3f}, -Recall: {:.3f}'.format(np.array(aucs).mean(), np.array(rcs_p).mean(), np.array(rcs_n).mean()))
 
-        output = '------------------------------------------------------------------------\n'
-        output += '{}-fold cross validation\n'.format(self.kfold)
-        output += 'AUC: {:.3f}, +Recall: {:.3f}, -Recall: {:.3f}'.format(np.array(aucs).mean(), np.array(rcs_p).mean(), np.array(rcs_n).mean())
+        output2 = '------------------------------------\n'
+        output2 += '{}-fold cross validation\n'.format(self.kfold)
+        output2 += 'AUC: {:.3f}, +Recall: {:.3f}, -Recall: {:.3f}'.format(np.array(aucs).mean(), np.array(rcs_p).mean(), np.array(rcs_n).mean())
 
-        return output
+        return output2
 
     def run_slice(self, ):
 
@@ -163,8 +163,8 @@ class Prediction:
         print('')
         print('{}-fold cross validation mean: '.format(self.kfold))
 
-        output = '------------------------------------------------------------------------\n'
-        output += '{}-time slice validation\n'.format(self.kfold)
-        output += 'AUC: {:.3f}, +Recall: {:.3f}, -Recall: {:.3f}'.format(np.array(aucs).mean(), np.array(rcs_p).mean(), np.array(rcs_n).mean())
+        output2 = '------------------------------------\n'
+        output2 += '{}-time slice validation\n'.format(self.kfold)
+        output2 += 'AUC: {:.3f}, +Recall: {:.3f}, -Recall: {:.3f}'.format(np.array(aucs).mean(), np.array(rcs_p).mean(), np.array(rcs_n).mean())
 
-        return output
+        return output2
