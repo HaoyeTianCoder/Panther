@@ -21,7 +21,7 @@ def obtain_ods_features(path_dataset):
 
                 cmd = 'java -classpath /Users/haoye.tian/Documents/University/project/coming_tian/' \
                       'target/coming-0-SNAPSHOT-jar-with-dependencies.jar  fr.inria.coming.main.ComingMain ' \
-                      '-mode features -input filespair -location {}:{} -output {}'.format(os.path.join(root,buggy), os.path.join(root,fixed), root)
+                      '-mode features -parameters cross:false -input filespair -location {}:{} -output {}'.format(os.path.join(root,buggy), os.path.join(root,fixed), root)
                 try:
                     with Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, encoding='utf-8') as p:
                         output, errors = p.communicate(timeout=300)

@@ -30,12 +30,13 @@ def engineered_features(path_json):
 
     return engineered_vector
 
-def save_features(path_dataset, w2v, other):
+def save_npy(path_dataset, w2v, other):
     total = 0
     cnt = 0
     all_learned_vector = []
     all_engineered_vector = []
     all_label = []
+    f = open('../data_vector/record.txt','w')
     for root, dirs, files in os.walk(path_dataset):
         for file in files:
             if file.endswith('.patch'):
@@ -52,7 +53,7 @@ def save_features(path_dataset, w2v, other):
                     label = 0
                 else:
                     print('unknow label: {}'.format(name))
-                    continue
+                    raise
 
                 path_patch = os.path.join(root, patch)
 
@@ -66,6 +67,7 @@ def save_features(path_dataset, w2v, other):
                         raise
 
                 if learned_vector == [] or engineered_vector == []:
+                    f.write('{} {} {}\n'.format('-999', name, 'fail'))
                     continue
 
                 all_learned_vector.append(learned_vector)
@@ -74,11 +76,13 @@ def save_features(path_dataset, w2v, other):
 
                 cnt += 1
                 print('process {}/{}, patch name: {}'.format(cnt, total, patch))
+                f.write('{} {} {}\n'.format(cnt, name, 'success'))
+    f.close()
 
     # save
-    path_learned_features = '../data_vector/' + 'learned_' + w2v + '.npy'
-    path_engineered_features = '../data_vector/' + 'engineered_' + other + '.npy'
-    path_labels = '../data_vector/labels.npy'
+    path_learned_features = '../data_vector_nocross/' + 'learned_' + w2v + '.npy'
+    path_engineered_features = '../data_vector_nocross/' + 'engineered_' + other + '.npy'
+    path_labels = '../data_vector_nocross/labels.npy'
     np.save(path_learned_features, all_learned_vector)
     np.save(path_engineered_features, all_engineered_vector)
     np.save(path_labels, all_label)
@@ -106,8 +110,9 @@ def learned_feature(path_patch, w2v):
 
     # embedding feature cross
     subtract, multiple, cos, euc = multi_diff_features(bug_vec, patched_vec)
-    # embedding = subtract + multiple + [cos] + [euc]
-    embedding = np.hstack((subtract, multiple, cos, euc,))
+    # embedding = np.hstack((subtract, multiple, cos, euc,))
+
+    embedding = subtract
 
     return list(embedding.flatten())
 
@@ -134,11 +139,11 @@ def multi_diff_features(buggy, patched):
 def output_vec(w2v, bugy_all_token, patched_all_token):
 
     if w2v == 'Bert':
-        m = BertClient(check_length=False)
+        m = BertClient(check_length=False,check_version=False)
         bug_vec = m.encode([bugy_all_token], is_tokenized=True)
         patched_vec = m.encode([patched_all_token], is_tokenized=True)
     elif w2v == 'Doc':
-        m = Doc2Vec.load('/Users/haoye.tian/Documents/University/project/patch_predict/data/model/doc_frag.model')
+        m = Doc2Vec.load('../model/doc_file_64d.model')
         bug_vec = m.infer_vector(bugy_all_token, alpha=0.025, steps=300)
         patched_vec = m.infer_vector(patched_all_token, alpha=0.025, steps=300)
     else:

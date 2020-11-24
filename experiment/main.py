@@ -1,6 +1,6 @@
 from config_default import *
 from common import preprocess, feature_extract, sample
-from experiment import predict_cv
+from experiment import predict_cv, train_doc
 from preprocess import deduplicate, obtain_ods_feature, save_feature
 
 class Experiment:
@@ -39,7 +39,8 @@ class Experiment:
             if combine_method == 'normal':
                 pass
             if combine_method == 'weight':
-                self.algorithm = 'lr_rf'
+                if not '_' in self.algorithm:
+                    raise Exception('wrong algorithm')
         
         self.labels = np.load(self.path_labels)
 
@@ -67,9 +68,11 @@ class Experiment:
         self.result += output1
 
         split_method = self.split_method
-        # train and predict
+
+        # init prediction
         pd = predict_cv.Prediction(self.dataset, self.labels, self.feature1_length, self.algorithm, split_method, 10)
 
+        # train and predict
         if split_method == 'cvfold':
             output2 = pd.run_cvfold()
         elif split_method == 'slice':
@@ -96,7 +99,7 @@ class Experiment:
         if not os.path.exists(out_foler):
             os.makedirs(out_foler)
         out_path = out_foler + self.fea_used + '.result'
-        with open(out_path,'w+') as file:
+        with open(out_path,'a+') as file:
             file.write(self.result)
 
 if __name__ == '__main__':
@@ -106,41 +109,53 @@ if __name__ == '__main__':
     dataset_name = cfg.dataset_name
     w2v = cfg.wcv
 
-    task = 'experiment'
+    task = 'save_npy'
     print('TASK: {}'.format(task))
 
-    if task == 'deduplicate':
+    if task == 'save_npy':
         # drop same patch
         if 'Unique' in path_dataset:
             print('already deduplicated!')
         else:
             path_dataset, dataset_name = deduplicate.deduplicate_by_token_with_location(dataset_name, path_dataset)
-
+    elif task == 'train_doc':
+        path_dataset_all = '/Users/haoye.tian/Documents/University/data/PatchCollectingV2'
+        d = train_doc.doc(path_dataset_all)
+        d.train()
     elif task == 'ods_feature':
         # generate ods feature json under folder where patch is
         obtain_ods_feature.obtain_ods_features(path_dataset)
 
-    elif task == 'save_feature':
+    elif task == 'save_npy':
         # save learned feature and engineered feature to npy for prediction later
         other = 'ods'
-        save_feature.save_features(path_dataset, w2v, other)
-
+        save_feature.save_npy(path_dataset, w2v, other)
     elif task == 'experiment':
         # start experiment
         path_learned_feature = '../data_vector/learned_Bert.npy'
         path_engineered_feature = '../data_vector/engineered_ods.npy'
-        path_labels = '../data_vector/labels.npy'
+        path_labels = '../data_vector/labels_bert_ods.npy'
 
         split_method = 'cvfold'
-        algorithm = 'lr'
+        combine_method = ''
 
-        # fea_used = 'learned'
+        fea_used = 'learned'
         # fea_used = 'engineered'
+        # fea_used = 'combine'
 
-        # combine
-        fea_used = 'combine'
-        # combine_method = 'normal'
-        combine_method = 'weight'
+        if fea_used == 'learned':
+            algorithm = 'dt'
+            # algorithm = 'lr'
+        elif fea_used == 'engineered':
+            algorithm = 'xgb'
+            # algorithm = 'lr'
+        elif fea_used == 'combine':
+            algorithm = 'lr_xgb'
+            # algorithm = 'xgb_xgb'
+            # algorithm = 'lstm'
+
+            # combine_method = 'normal'
+            # combine_method = 'weight'
 
         e = Experiment(fea_used, path_learned_feature, path_engineered_feature, path_labels, split_method, algorithm, combine_method )
         e.run()
