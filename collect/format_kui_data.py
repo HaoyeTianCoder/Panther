@@ -7,7 +7,7 @@ target_path = '/Users/haoye.tian/Documents/University/data/PatchCollecting/'
 tools = ['AVATAR', 'FixMiner', 'TBar', 'kPAR', 'jKali', 'jMutRepair', 'Cardumen',
          'GenProgA', 'KaliA', 'RSRepairA']
 
-
+tools = ['DynaMoth']
 # AVATAR = old_path + 'AVATAR'
 # FixMiner = old_path + 'FixMiner'
 # TBar = old_path + 'TBar'
@@ -41,7 +41,7 @@ for tool, path in dict_tool.items():
                     destination_folder = target_path + tool + '/Correct/' + project + '/'
                 elif label == 'P':
                     destination_folder = target_path + tool + '/Incorrect/' + project + '/'
-                    new_name = new_name.replace('.patch', '-plausible.patch')
+                    # new_name = new_name.replace('.patch', '-plausible.patch')
 
                 destination = destination_folder + new_name
 

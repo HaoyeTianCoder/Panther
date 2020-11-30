@@ -2,9 +2,9 @@ from config_default_old import *
 import os, shutil
 from subprocess import *
 
-kui_tools = ['AVATAR', 'FixMiner', 'TBar', 'kPAR','iFixR']
+kui_tools = ['AVATAR', 'FixMiner', 'TBar', 'kPAR','iFixR','DynaMoth']
 J_projects = ['jKali', 'jMutRepair', 'Cardumen']
-A_projects = ['GenProgA', 'KaliA', 'RSRepairA','DynaMoth']
+A_projects = ['GenProgA', 'KaliA', 'RSRepairA']
 
 def extract_source_file(defects4j_buggy, path_patch, tools):
     for tool in tools:
@@ -221,8 +221,13 @@ def parse_patch(root, file, project, id, tool):
 def obtain_fixed(root, file, project, id, fix_operation, path_target):
     # obtain fixed file
     fixed_final_file = ''
-    with open(path_target, 'r') as f:
-        fixed_final_file = f.readlines()
+    with open(path_target, 'r+') as f:
+        try:
+            fixed_final_file = f.readlines()
+        except Exception:
+            print('error: {}'.format(file))
+            return ['null file']
+        # fixed_final_file = [line for line in f]
         for i in range(len(fix_operation)):
             bug_location_line, buggy_lines, fixed_chunk = fix_operation[i][0], fix_operation[i][1], fix_operation[i][2]
 
@@ -243,6 +248,61 @@ def save_fixed(fixed_final_file, path_target_fixed):
     with open(path_target_fixed, 'w+') as f:
         f.write(fixed_final_file)
 
+def obtain_fixed_4PraPR(root, file, project, id, fix_operation, path_target_buggy):
+    fixed_final_file = ''
+    with open(path_target_buggy, 'r') as f:
+        fixed_final_file = f.readlines()
+        for i in range(len(fix_operation)):
+            bug_location_line, buggy_lines, fixed_chunk = fix_operation[i][0], fix_operation[i][1], \
+                                                          fix_operation[i][2]
+            # handle different project
+            if project == 'Chart':
+                if id == '20':
+                    pass
+                else:
+                    bug_location_line -= 1
+
+            elif project == 'Closure':
+                if id == '10':
+                    pass
+                elif id == '14':
+                    bug_location_line += 2
+                elif id == '70':
+                    bug_location_line += 1
+                elif id == '86':
+                    bug_location_line -= 4
+                else:
+                    bug_location_line -= 1
+
+                if id == '63':
+                    buggy_lines += 1
+
+            elif project == 'Lang':
+                if id == '10':
+                    bug_location_line += 5
+                elif id == '26':
+                    bug_location_line += 2
+                else:
+                    bug_location_line -= 1
+
+            elif project == 'Math':
+                if id == '70':
+                    bug_location_line -= 2
+                if id == '85':
+                    pass
+                else:
+                    bug_location_line -= 1
+
+            elif project == 'Mockito':
+                bug_location_line -= 1
+
+            elif project == 'Time':
+                bug_location_line -= 1
+
+            head = fixed_final_file[:bug_location_line - 1]
+            tail = fixed_final_file[bug_location_line - 1 + buggy_lines:]
+            fixed_final_file = head + fixed_chunk + tail
+    return fixed_final_file
 
 def extract4PraPR():
     tool = 'PraPR'
@@ -254,7 +314,7 @@ def extract4PraPR():
                 continue
 
             id = str(file.split('.')[0])
-            path_target = os.path.join(root, id + '.buggy')
+            path_target_buggy = os.path.join(root, id + '.buggy')
             path_target_fixed = os.path.join(root, id + '.fixed')
             project = str(root.split('/')[-1])
 
@@ -265,63 +325,11 @@ def extract4PraPR():
             fix_operation = parse_patch(root, file, project, id, tool)
 
             # obtain fixed
-            fixed_final_file = ''
-            with open(path_target, 'r') as f:
-                fixed_final_file = f.readlines()
-                for i in range(len(fix_operation)):
-                    bug_location_line, buggy_lines, fixed_chunk = fix_operation[i][0], fix_operation[i][1], \
-                                                                  fix_operation[i][2]
+            fixed_final_file = obtain_fixed_4PraPR(root, file, project, id, fix_operation, path_target_buggy)
 
-                    # handle different project
-                    if project == 'Chart':
-                        if id == '20':
-                            pass
-                        else:
-                            bug_location_line -= 1
-
-                    elif project == 'Closure':
-                        if id == '10':
-                            pass
-                        elif id == '14':
-                            bug_location_line += 2
-                        elif id == '70':
-                            bug_location_line += 1
-                        elif id == '86':
-                            bug_location_line -= 4
-                        else:
-                            bug_location_line -= 1
-
-                        if id == '63':
-                            buggy_lines += 1
-
-                    elif project == 'Lang':
-                        if id == '10':
-                            bug_location_line += 5
-                        elif id == '26':
-                            bug_location_line += 2
-                        else:
-                            bug_location_line -= 1
-
-                    elif project == 'Math':
-                        if id == '70':
-                            bug_location_line -= 2
-                        if id == '85':
-                            pass
-                        else:
-                            bug_location_line -= 1
-
-                    elif project == 'Mockito':
-                        bug_location_line -= 1
-
-                    elif project == 'Time':
-                        bug_location_line -= 1
-
-                    head = fixed_final_file[:bug_location_line - 1]
-                    tail = fixed_final_file[bug_location_line - 1 + buggy_lines:]
-                    fixed_final_file = head + fixed_chunk + tail
 
             # save to fixed file
-            save_fixed(fixed_final_file, path_target_fixed, cnt)
+            save_fixed(fixed_final_file, path_target_fixed, )
 
 
             # # method 2
@@ -357,7 +365,7 @@ if __name__ == '__main__':
 
     # extract4ssFix2()
 
-    #extract4normal(tool = 'DeepRepair')
+    # extract4normal(tool = 'DeepRepair')
 
     # extract4normal(tool = 'ACS')
 
@@ -396,3 +404,5 @@ if __name__ == '__main__':
     #     extract4normal(tool=tool)
 
     # extract4normal(tool='iFixR')
+
+    # extract4normal(tool='DynaMoth')

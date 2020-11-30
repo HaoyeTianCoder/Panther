@@ -26,7 +26,7 @@ def all():
     plt.pie(share, labels=tools,)
 
     # plt.legend()
-    plt.title("Tools share")
+    plt.title("Percentage of tools in all patches")
 
     plt.show()
 
@@ -89,9 +89,12 @@ def incorrect():
 def repairThemAll():
     plt.figure(figsize=(20, 8), dpi=100)
     plt.pie([48481, 13716, 2096], labels=['Arja','GenProg','Others'],)
-    plt.title("Tools share")
+    plt.title("Percentage of tools in all patches")
     plt.show()
 
 if __name__ == '__main__':
+    # repairThemAll()
+
+    all()
     # correct()
-    incorrect()
+    # incorrect()

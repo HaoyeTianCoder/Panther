@@ -1,7 +1,7 @@
 import os
 import shutil
 
-path = '/Users/haoye.tian/Documents/University/data/PatchCollecting/ConFix'
+path = '/Users/haoye.tian/Documents/University/data/PatchCollectingV2UniqueTokenFix/ConFix'
 
 def format():
     for root, dirs, files in os.walk(path):
@@ -68,5 +68,29 @@ def label():
                 else:
                     raise
 
+def move():
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if file.endswith('.patch'):
+                project = file.split('-')[1]
+                # project = project.lower()
+                id = file.split('-')[2]
+                name = file.split('.')[0]
+                buggy = name + '-s.java'
+                fixed = name + '-t.java'
+
+                feature_name = 'features_' + buggy + '->' + fixed + '.json'
+
+                new_path = root + '/../' + project + '/' + id
+                if not os.path.exists(new_path):
+                    os.makedirs(new_path)
+
+                if not project in root:
+                    shutil.copy(os.path.join(root, file), new_path)
+                    shutil.copy(os.path.join(root, buggy), new_path)
+                    shutil.copy(os.path.join(root, fixed), new_path)
+                    shutil.copy(os.path.join(root, feature_name), new_path)
+
 # format()
-label()
+# label()
+move()
