@@ -116,7 +116,11 @@ if __name__ == '__main__':
     w2v = cfg.wcv
     # w2v = 'Doc'
 
-    task = 'experiment'
+    path_dataset = '/Users/haoye.tian/Documents/University/data/PatchCollectingV2UniqueToken'
+    dataset_name = 'PatchCollectingV2UniqueToken'
+    version = 'V2U'
+
+    task = 'save_npy'
     print('TASK: {}'.format(task))
 
     if task == 'deduplicate':
@@ -142,11 +146,10 @@ if __name__ == '__main__':
 
     elif task == 'experiment':
         # start experiment
-        print('version: {}  w2c: {}'.format(version, w2v))
-        path_learned_feature = '../data_vector_'+version+'_'+w2v+'/learned_'+w2v+'.npy'
-        path_engineered_feature = '../data_vector_'+version+'_'+w2v+'/engineered_ods.npy'
-        path_labels = '../data_vector_'+version+'_'+w2v+'/labels.npy'
-        record = '../data_vector_'+version+'_'+w2v+'/record.txt'
+        path_learned_feature = '../data_vector_Fix_Apart_Bert/learned_Bert.npy'
+        path_engineered_feature = '../data_vector_Fix_Apart_Bert/engineered_ods.npy'
+        path_labels = '../data_vector_Fix_Apart_Bert/labels.npy'
+        record = '../data_vector_Fix_Apart_Bert/record.txt'
 
         split_method = 'cvfold'
         combine_method = ''
@@ -156,17 +159,16 @@ if __name__ == '__main__':
         fea_used = 'combine'
 
         if fea_used == 'learned':
-            # algorithm = 'lr'
-            algorithm = 'dnn'
-        elif fea_used == 'engineered':
-            # algorithm = 'dnn'
             algorithm = 'xgb'
+            # algorithm = 'lr'
+        elif fea_used == 'engineered':
+            algorithm = 'xgb'
+            # algorithm = 'lr'
         elif fea_used == 'combine':
-            # algorithm = 'wide_deep'
-            # algorithm = 'dnn_dnn_venn'
-            algorithm = 'xgb_venn'
+            # algorithm = 'xgb_venn'
+            # algorithm = 'lr_xgb_dnn'
             # algorithm = 'lr_xgb'
-            # algorithm = 'xgb_xgb'
+            algorithm = 'xgb_xgb'
 
             # combine_method = 'normal'
             # combine_method = 'weight'
