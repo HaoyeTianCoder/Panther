@@ -132,3 +132,4 @@ dmypy.json
 /result/
 .idea/
 *.npy
+/data_vector_*
