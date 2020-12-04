@@ -155,6 +155,7 @@ def deduplicate_by_token_with_location(dataset_name, path_dataset):
                     post += 1
 
     print('pre:{}, post:{} ---- exception:{}, repeat:{}'.format(pre, post, exception, repeat))
+    print('remember change path in config_default.py !!!')
     return new_dataset_path, new_dataset_name
 
 if __name__ == '__main__':

@@ -11,6 +11,7 @@ def obtain_ods_features(path_dataset):
                 total += 1
 
                 name = file.split('.')[0]
+
                 buggy = name + '-s.java'
                 fixed = name + '-t.java'
 

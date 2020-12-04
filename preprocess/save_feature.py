@@ -11,6 +11,7 @@ import json
 
 def engineered_features(path_json):
     engineered_vector = []
+    repair_patterns = []
     try:
         with open(path_json, 'r') as f:
             feature_json = json.load(f)
@@ -18,25 +19,31 @@ def engineered_features(path_json):
             for i in range(len(features_list)):
                 dict_fea = features_list[i]
                 if 'repairPatterns' in dict_fea.keys():
-                    continue
-                value = list(dict_fea.values())[0]
-                engineered_vector.append(value)
+                        # continue
+                        for k,v in dict_fea['repairPatterns'].items():
+                            repair_patterns.append(int(v))
+                else:
+                    value = list(dict_fea.values())[0]
+                    engineered_vector.append(value)
     except Exception as e:
         print('name: {}, exception: {}'.format(path_json, e))
         return []
-    finally:
-        if engineered_vector == []:
-            print('name: {}, exception: {}'.format(path_json, 'null feature'))
 
-    return engineered_vector
+    if engineered_vector == [] or repair_patterns == [] or len(repair_patterns) != 26 or len(engineered_vector + repair_patterns) != 182:
+    # if engineered_vector == []:
+        print('name: {}, exception: {}'.format(path_json, 'null feature or shape error'))
+        return []
 
-def save_npy(path_dataset, w2v, other):
-    total = 0
+    # return engineered_vector
+    return engineered_vector + repair_patterns
+
+def save_npy(path_dataset, w2v, other, version):
+    total = -1
     cnt = 0
     all_learned_vector = []
     all_engineered_vector = []
     all_label = []
-    f = open('../data_vector/record.txt','w')
+    record = ''
     for root, dirs, files in os.walk(path_dataset):
         for file in files:
             if file.endswith('.patch'):
@@ -57,35 +64,48 @@ def save_npy(path_dataset, w2v, other):
 
                 path_patch = os.path.join(root, patch)
 
-                if w2v:
-                    learned_vector = learned_feature(path_patch, w2v)
-                if other:
-                    if other == 'ods':
-                        path_json = os.path.join(root, ods_feature)
-                        engineered_vector = engineered_features(path_json)
-                    else:
-                        raise
+                # engineered feature
+                if other == 'ods':
+                    path_json = os.path.join(root, ods_feature)
+                    engineered_vector = engineered_features(path_json)
+                else:
+                    raise
 
-                if learned_vector == [] or engineered_vector == []:
-                    f.write('{} {} {}\n'.format('-999', name, 'fail'))
+                if engineered_vector == []:
+                    continue
+
+                # learned feature
+                learned_vector = learned_feature(path_patch, w2v)
+                # learned_vector = [1,2,3,4]
+
+                if learned_vector == []:
                     continue
 
                 all_learned_vector.append(learned_vector)
                 all_engineered_vector.append(engineered_vector)
                 all_label.append(label)
 
-                cnt += 1
                 print('process {}/{}, patch name: {}'.format(cnt, total, patch))
-                f.write('{} {} {}\n'.format(cnt, name, 'success'))
-    f.close()
+                # f.write('{} {} {}\n'.format(cnt, name, 'success'))
+                record += '{} {} {}\n'.format(cnt, name, 'success')
 
+                cnt += 1
+                if len(learned_vector) != len(all_learned_vector[0]) or len(engineered_vector) != len(all_engineered_vector[0]):
+                    raise Exception('shape error')
     # save
-    path_learned_features = '../data_vector_nocross/' + 'learned_' + w2v + '.npy'
-    path_engineered_features = '../data_vector_nocross/' + 'engineered_' + other + '.npy'
-    path_labels = '../data_vector_nocross/labels.npy'
-    np.save(path_learned_features, all_learned_vector)
-    np.save(path_engineered_features, all_engineered_vector)
-    np.save(path_labels, all_label)
+    folder = '../data_vector_' + version + '_' + w2v + '/'
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    path_learned_features = folder + 'learned_' + w2v + '.npy'
+    path_engineered_features = folder + 'engineered_' + other + '.npy'
+    path_labels = folder + 'labels.npy'
+
+    f = open(folder + 'record.txt', 'w+')
+    f.write(record)
+    f.close()
+    np.save(path_learned_features, all_learned_vector, allow_pickle=False)
+    np.save(path_engineered_features, all_engineered_vector, allow_pickle=False)
+    np.save(path_labels, all_label, allow_pickle=False)
 
 def learned_feature(path_patch, w2v):
     try:
@@ -110,9 +130,9 @@ def learned_feature(path_patch, w2v):
 
     # embedding feature cross
     subtract, multiple, cos, euc = multi_diff_features(bug_vec, patched_vec)
-    # embedding = np.hstack((subtract, multiple, cos, euc,))
+    # embedding = subtract
 
-    embedding = subtract
+    embedding = np.hstack((subtract, multiple, cos, euc,))
 
     return list(embedding.flatten())
 
@@ -139,11 +159,12 @@ def multi_diff_features(buggy, patched):
 def output_vec(w2v, bugy_all_token, patched_all_token):
 
     if w2v == 'Bert':
-        m = BertClient(check_length=False,check_version=False)
+        m = BertClient(check_length=False, check_version=False)
         bug_vec = m.encode([bugy_all_token], is_tokenized=True)
         patched_vec = m.encode([patched_all_token], is_tokenized=True)
     elif w2v == 'Doc':
-        m = Doc2Vec.load('../model/doc_file_64d.model')
+        # m = Doc2Vec.load('../model/doc_file_64d.model')
+        m = Doc2Vec.load('../model/Doc_frag_ASE.model')
         bug_vec = m.infer_vector(bugy_all_token, alpha=0.025, steps=300)
         patched_vec = m.infer_vector(patched_all_token, alpha=0.025, steps=300)
     else:
