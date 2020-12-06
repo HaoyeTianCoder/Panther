@@ -8,6 +8,8 @@ from nltk.tokenize import word_tokenize
 from sklearn.metrics.pairwise import *
 import re
 import json
+import pickle
+from CC2Vec import lmg_cc2ftr_interface
 
 def engineered_features(path_json):
     engineered_vector = []
@@ -44,6 +46,7 @@ def save_npy(path_dataset, w2v, other, version):
     all_engineered_vector = []
     all_label = []
     record = ''
+    dictionary = pickle.load(open('../CC2Vec/dict.pkl', 'rb'))
     for root, dirs, files in os.walk(path_dataset):
         for file in files:
             if file.endswith('.patch'):
@@ -70,14 +73,16 @@ def save_npy(path_dataset, w2v, other, version):
                     engineered_vector = engineered_features(path_json)
                 else:
                     raise
-
                 if engineered_vector == []:
                     continue
 
                 # learned feature
-                learned_vector = learned_feature(path_patch, w2v)
+                if w2v == 'CC2Vec':
+                    learned_vector = lmg_cc2ftr_interface.learned_feature(path_patch, load_model='../CC2Vec/cc2ftr.pt', dictionary=dictionary)
+                    learned_vector = list(learned_vector[0])
+                else:
+                    learned_vector = learned_feature(path_patch, w2v)
                 # learned_vector = [1,2,3,4]
-
                 if learned_vector == []:
                     continue
 
