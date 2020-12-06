@@ -1,8 +1,8 @@
 import argparse
-from lmg_padding import processing_data
+from CC2Vec.lmg_padding import processing_data
 import pickle
-from lmg_cc2ftr_train import train_model
-from lmg_cc2ftr_extracted import extracted_cc2ftr
+from CC2Vec.lmg_cc2ftr_train import train_model
+from CC2Vec.lmg_cc2ftr_extracted import extracted_cc2ftr
 
 def read_args_lmg():
     parser = argparse.ArgumentParser()

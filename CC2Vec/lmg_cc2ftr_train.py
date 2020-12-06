@@ -1,11 +1,11 @@
-from lmg_utils import mini_batches, commit_msg_label
+from CC2Vec.lmg_utils import mini_batches, commit_msg_label
 import os
 import datetime
 import torch.nn as nn
 from tqdm import tqdm
 import torch
-from lmg_cc2ftr_model import HierachicalRNN
-from lmg_utils import save
+from CC2Vec.lmg_cc2ftr_model import HierachicalRNN
+from CC2Vec.lmg_utils import save
 
 
 def train_model(data, params):
