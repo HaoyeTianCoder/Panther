@@ -79,7 +79,7 @@ def get_wide_deep(dimension_learned, dimension_engineered):
     model = models.Model(inputs=[input_embeddings_tensor, input_fe_tensor], outputs=output_tensor)
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['AUC'])
 
-    plot_model(model, to_file='./model/wide_deep.png', show_shapes=True)
+    plot_model(model, to_file='../model/wide_deep.png', show_shapes=True)
 
     return model
 
@@ -104,7 +104,7 @@ def get_dnn_dnn(dimension_learned, dimension_engineered):
     model = models.Model(inputs=[input_embeddings_tensor, input_engineered_tensor], outputs=output_tensor)
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['AUC'])
 
-    plot_model(model, to_file='./model/dnn_dnn.png', show_shapes=True)
+    plot_model(model, to_file='../model/dnn_dnn.png', show_shapes=True)
 
     return model
 
@@ -133,6 +133,6 @@ def get_dnn_cnn(dimension_learned, dimension_engineered):
     model = models.Model(inputs=[input_embeddings_tensor, input_engineered_tensor], outputs=output_tensor)
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['AUC'])
 
-    plot_model(model, to_file='./model/dnn_cnn.png', show_shapes=True)
+    plot_model(model, to_file='../model/dnn_cnn.png', show_shapes=True)
 
     return model

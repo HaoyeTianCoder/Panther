@@ -39,6 +39,58 @@ class Prediction:
         self.kfold = kfold
         self.feature1_length = feature1_length
 
+    def shap_value(self, xgb1, x_test_xgb1, xgb2, x_test_xgb2, xgb_all, x_test, learned_incorrectness, engineered_incorrectness, combine_incorrectness, patch_test):
+        Bert_feature_name = ['L-'+str(i) for i in range(2050)]
+        ODS_feature_name = ['P4J_FORMER_INSERT_CONTROL_RF', 'P4J_FORMER_INSERT_GUARD_RF', 'P4J_FORMER_INSERT_STMT_RF', 'P4J_FORMER_REPLACE_COND_RF', 'P4J_FORMER_REPLACE_STMT_RF', 'P4J_FORMER_REMOVE_PARTIAL_IF', 'P4J_FORMER_REMOVE_STMT', 'P4J_FORMER_REMOVE_WHOLE_IF', 'P4J_FORMER_REMOVE_WHOLE_BLOCK', 'P4J_FORMER_OP_ADD_AF', 'P4J_FORMER_OP_SUB_AF', 'P4J_FORMER_OP_MUL_AF', 'P4J_FORMER_OP_DIV_AF', 'P4J_FORMER_OP_MOD_AF', 'P4J_FORMER_OP_LE_AF', 'P4J_FORMER_OP_LT_AF', 'P4J_FORMER_OP_GE_AF', 'P4J_FORMER_OP_GT_AF', 'P4J_FORMER_OP_EQ_AF', 'P4J_FORMER_OP_NE_AF', 'P4J_FORMER_UOP_INC_AF', 'P4J_FORMER_UOP_DEC_AF', 'P4J_FORMER_ASSIGN_LHS_AF', 'P4J_FORMER_ASSIGN_ZERO_AF', 'P4J_FORMER_ASSIGN_CONST_AF', 'P4J_FORMER_CHANGED_AF', 'P4J_FORMER_DEREF_AF', 'P4J_FORMER_INDEX_AF', 'P4J_FORMER_MEMBER_ACCESS_AF', 'P4J_FORMER_CALLEE_AF', 'P4J_FORMER_CALL_ARGUMENT_AF', 'P4J_FORMER_ABST_V_AF', 'P4J_FORMER_STMT_LABEL_AF', 'P4J_FORMER_STMT_LOOP_AF', 'P4J_FORMER_STMT_ASSIGN_AF', 'P4J_FORMER_STMT_CALL_AF', 'P4J_FORMER_STMT_COND_AF', 'P4J_FORMER_STMT_CONTROL_AF', 'P4J_FORMER_R_STMT_ASSIGN_AF', 'P4J_FORMER_R_STMT_CALL_AF', 'P4J_FORMER_R_STMT_COND_AF', 'P4J_FORMER_R_STMT_CONTROL_AF', 'P4J_FORMER_MODIFIED_VF', 'P4J_FORMER_MODIFIED_SIMILAR_VF', 'P4J_FORMER_FUNC_ARGUMENT_VF', 'P4J_FORMER_MEMBER_VF', 'P4J_FORMER_LOCAL_VARIABLE_VF', 'P4J_FORMER_GLOBAL_VARIABLE_VF', 'P4J_FORMER_ZERO_CONST_VF', 'P4J_FORMER_NONZERO_CONST_VF', 'P4J_FORMER_STRING_LITERAL_VF', 'P4J_FORMER_SIZE_LITERAL_VF', 'P4J_LATER_INSERT_CONTROL_RF', 'P4J_LATER_INSERT_GUARD_RF', 'P4J_LATER_INSERT_STMT_RF', 'P4J_LATER_REPLACE_COND_RF', 'P4J_LATER_REPLACE_STMT_RF', 'P4J_LATER_REMOVE_PARTIAL_IF', 'P4J_LATER_REMOVE_STMT', 'P4J_LATER_REMOVE_WHOLE_IF', 'P4J_LATER_REMOVE_WHOLE_BLOCK', 'P4J_LATER_OP_ADD_AF', 'P4J_LATER_OP_SUB_AF', 'P4J_LATER_OP_MUL_AF', 'P4J_LATER_OP_DIV_AF', 'P4J_LATER_OP_MOD_AF', 'P4J_LATER_OP_LE_AF', 'P4J_LATER_OP_LT_AF', 'P4J_LATER_OP_GE_AF', 'P4J_LATER_OP_GT_AF', 'P4J_LATER_OP_EQ_AF', 'P4J_LATER_OP_NE_AF', 'P4J_LATER_UOP_INC_AF', 'P4J_LATER_UOP_DEC_AF', 'P4J_LATER_ASSIGN_LHS_AF', 'P4J_LATER_ASSIGN_ZERO_AF', 'P4J_LATER_ASSIGN_CONST_AF', 'P4J_LATER_CHANGED_AF', 'P4J_LATER_DEREF_AF', 'P4J_LATER_INDEX_AF', 'P4J_LATER_MEMBER_ACCESS_AF', 'P4J_LATER_CALLEE_AF', 'P4J_LATER_CALL_ARGUMENT_AF', 'P4J_LATER_ABST_V_AF', 'P4J_LATER_STMT_LABEL_AF', 'P4J_LATER_STMT_LOOP_AF', 'P4J_LATER_STMT_ASSIGN_AF', 'P4J_LATER_STMT_CALL_AF', 'P4J_LATER_STMT_COND_AF', 'P4J_LATER_STMT_CONTROL_AF', 'P4J_LATER_R_STMT_ASSIGN_AF', 'P4J_LATER_R_STMT_CALL_AF', 'P4J_LATER_R_STMT_COND_AF', 'P4J_LATER_R_STMT_CONTROL_AF', 'P4J_LATER_MODIFIED_VF', 'P4J_LATER_MODIFIED_SIMILAR_VF', 'P4J_LATER_FUNC_ARGUMENT_VF', 'P4J_LATER_MEMBER_VF', 'P4J_LATER_LOCAL_VARIABLE_VF', 'P4J_LATER_GLOBAL_VARIABLE_VF', 'P4J_LATER_ZERO_CONST_VF', 'P4J_LATER_NONZERO_CONST_VF', 'P4J_LATER_STRING_LITERAL_VF', 'P4J_LATER_SIZE_LITERAL_VF', 'P4J_SRC_INSERT_CONTROL_RF', 'P4J_SRC_INSERT_GUARD_RF', 'P4J_SRC_INSERT_STMT_RF', 'P4J_SRC_REPLACE_COND_RF', 'P4J_SRC_REPLACE_STMT_RF', 'P4J_SRC_REMOVE_PARTIAL_IF', 'P4J_SRC_REMOVE_STMT', 'P4J_SRC_REMOVE_WHOLE_IF', 'P4J_SRC_REMOVE_WHOLE_BLOCK', 'P4J_SRC_OP_ADD_AF', 'P4J_SRC_OP_SUB_AF', 'P4J_SRC_OP_MUL_AF', 'P4J_SRC_OP_DIV_AF', 'P4J_SRC_OP_MOD_AF', 'P4J_SRC_OP_LE_AF', 'P4J_SRC_OP_LT_AF', 'P4J_SRC_OP_GE_AF', 'P4J_SRC_OP_GT_AF', 'P4J_SRC_OP_EQ_AF', 'P4J_SRC_OP_NE_AF', 'P4J_SRC_UOP_INC_AF', 'P4J_SRC_UOP_DEC_AF', 'P4J_SRC_ASSIGN_LHS_AF', 'P4J_SRC_ASSIGN_ZERO_AF', 'P4J_SRC_ASSIGN_CONST_AF', 'P4J_SRC_CHANGED_AF', 'P4J_SRC_DEREF_AF', 'P4J_SRC_INDEX_AF', 'P4J_SRC_MEMBER_ACCESS_AF', 'P4J_SRC_CALLEE_AF', 'P4J_SRC_CALL_ARGUMENT_AF', 'P4J_SRC_ABST_V_AF', 'P4J_SRC_STMT_LABEL_AF', 'P4J_SRC_STMT_LOOP_AF', 'P4J_SRC_STMT_ASSIGN_AF', 'P4J_SRC_STMT_CALL_AF', 'P4J_SRC_STMT_COND_AF', 'P4J_SRC_STMT_CONTROL_AF', 'P4J_SRC_R_STMT_ASSIGN_AF', 'P4J_SRC_R_STMT_CALL_AF', 'P4J_SRC_R_STMT_COND_AF', 'P4J_SRC_R_STMT_CONTROL_AF', 'P4J_SRC_MODIFIED_VF', 'P4J_SRC_MODIFIED_SIMILAR_VF', 'P4J_SRC_FUNC_ARGUMENT_VF', 'P4J_SRC_MEMBER_VF', 'P4J_SRC_LOCAL_VARIABLE_VF', 'P4J_SRC_GLOBAL_VARIABLE_VF', 'P4J_SRC_ZERO_CONST_VF', 'P4J_SRC_NONZERO_CONST_VF', 'P4J_SRC_STRING_LITERAL_VF', 'P4J_SRC_SIZE_LITERAL_VF', 'codeMove', 'condBlockExcAdd', 'condBlockOthersAdd', 'condBlockRem', 'condBlockRetAdd', 'constChange', 'copyPaste', 'expArithMod', 'expLogicExpand', 'expLogicMod', 'expLogicReduce', 'missNullCheckN', 'missNullCheckP', 'notClassified', 'singleLine', 'unwrapIfElse', 'unwrapMethod', 'unwrapTryCatch', 'wrapsElse', 'wrapsIf', 'wrapsIfElse', 'wrapsLoop', 'wrapsMethod', 'wrapsTryCatch', 'wrongMethodRef', 'wrongVarRef']
+
+        # xgb_1 SHAP
+        explainer_tree1 = shap.TreeExplainer(xgb1,)
+        x_test_xgb1 = pd.DataFrame(x_test_xgb1, columns=Bert_feature_name)
+        shap_values_tree1 = explainer_tree1.shap_values(x_test_xgb1, )
+        # plt.subplot(1, 2, 2)
+        plt.subplots_adjust(left=0.2, right=0.9, top=0.9, bottom=0.1)
+        shap.summary_plot(shap_values_tree1, x_test_xgb1, max_display=10, plot_size=(10, 5))
+        plt.savefig('test.png')
+        plt.clf()
+        plt.subplots_adjust(left=0.2, right=0.9, top=0.9, bottom=0.1)
+        shap.summary_plot(shap_values_tree1, x_test_xgb1, plot_type="bar", max_display=10)
+        plt.clf()
+
+        # xgb_2 SHAP
+        explainer_tree2 = shap.TreeExplainer(xgb2,)
+        x_test_xgb2 = pd.DataFrame(x_test_xgb2, columns=ODS_feature_name)
+        shap_values_tree2 = explainer_tree2.shap_values(x_test_xgb2, )
+        # plt.subplot(1, 2, 2)
+        plt.subplots_adjust(left=0.37, right=0.97, top=0.9, bottom=0.1)
+        shap.summary_plot(shap_values_tree2, x_test_xgb2, max_display=10, plot_size=(10, 5))
+        plt.clf()
+        plt.subplots_adjust(left=0.37, right=0.97, top=0.9, bottom=0.1)
+        shap.summary_plot(shap_values_tree2, x_test_xgb2, plot_type="bar", max_display=10)
+        plt.clf()
+
+        # xgb_all SHAP
+        explainer_tree = shap.TreeExplainer(xgb_all,)
+        x_test = pd.DataFrame(x_test, columns=Bert_feature_name+ODS_feature_name)
+        shap_values_tree = explainer_tree.shap_values(x_test, )
+        plt.subplots_adjust(left=0.165, right=0.97, top=0.9, bottom=0.1)
+        shap.summary_plot(shap_values_tree, x_test, max_display=10)
+        plt.clf()
+        plt.subplots_adjust(left=0.165, right=0.97, top=0.9, bottom=0.1)
+        shap.summary_plot(shap_values_tree, x_test, plot_type="bar", max_display=10)
+        plt.clf()
+
+        # interaction
+        shap_interaction_values = explainer_tree.shap_interaction_values(x_test)
+        shap.summary_plot(shap_interaction_values, x_test, max_display=5)
+
+        shap.dependence_plot(("singleLine", "L-1187"), shap_interaction_values, x_test, display_features=x_test)
+        # shap.dependence_plot(("rank(1)", "rank(2)"), shap_interaction_values, x_test, display_features=x_test)
+        # shap.dependence_plot('singleLine', shap_values_tree, x_test, interaction_index='L-1187',)
+
+        # analysis single sample for the last time
+        # self.sample_analysis(learned_incorrectness, engineered_incorrectness, combine_incorrectness, patch_test, x_test, x_test_xgb1, x_test_xgb2, shap_values_tree, shap_values_tree1, shap_values_tree2, explainer_tree, explainer_tree1, explainer_tree2)
+
+
     def sample_analysis(self, learned, engineered, combine, patch_test, x_test, x_test_xgb1, x_test_xgb2, shap_values_tree, shap_values_tree1, shap_values_tree2, explainer_tree, explainer_tree1, explainer_tree2):
         learned_set = set(learned)
         engineered_set = set(engineered)
@@ -679,13 +731,6 @@ class Prediction:
                 engineered_incorrectness_all += engineered_incorrectness
                 combine_incorrectness_all += combine_incorrectness
 
-
-            #     # lr SHAP
-            #     explainer_lr = shap.LinearExplainer(lr, x_train_lr)
-            #     shap_values_lr = explainer_lr.shap_values(x_test_lr)
-            #     shap.summary_plot(shap_values_lr, x_test_lr)
-            #     shap.summary_plot(shap_values_lr, x_test_lr, plot_type="bar")
-
         print('')
         print('{}-fold cross validation mean: '.format(self.kfold))
         print('Accuracy: {:.1f} -- Precision: {:.1f} -- +Recall: {:.1f} -- F1: {:.1f} -- AUC: {:.3f}'.format(np.array(accs).mean()*100, np.array(prcs).mean()*100, np.array(rcs).mean()*100, np.array(f1s).mean()*100, np.array(aucs).mean()))
@@ -700,7 +745,7 @@ class Prediction:
             self.draw_venn3(learned_correctness_all, engineered_correctness_all, combine_correctness_all, learned_incorrectness_all, engineered_incorrectness_all, combine_incorrectness_all)
 
             # # correct included
-            # independent_learned, independent_engineered, independent_combine = self.independent_case(learned_correctness_all, engineered_correctness_all, combine_correctness_all)
+            independent_learned, independent_engineered, independent_combine = self.independent_case(learned_correctness_all, engineered_correctness_all, combine_correctness_all)
             # print('Correct Included: ')
             # print('independent_learned: {}'.format(independent_learned))
             # print('independent_engineered: {}'.format(independent_engineered))
@@ -712,57 +757,9 @@ class Prediction:
             # print('independent_engineered: {}'.format(independent_engineered))
             # print('independent_combine: {}'.format(independent_combine))
 
-            # calculate SHAP value
-            if self.algorithm == 'xgb_venn':
-                Bert_feature_name = ['L-'+str(i) for i in range(2050)]
-                ODS_feature_name = ['P4J_FORMER_INSERT_CONTROL_RF', 'P4J_FORMER_INSERT_GUARD_RF', 'P4J_FORMER_INSERT_STMT_RF', 'P4J_FORMER_REPLACE_COND_RF', 'P4J_FORMER_REPLACE_STMT_RF', 'P4J_FORMER_REMOVE_PARTIAL_IF', 'P4J_FORMER_REMOVE_STMT', 'P4J_FORMER_REMOVE_WHOLE_IF', 'P4J_FORMER_REMOVE_WHOLE_BLOCK', 'P4J_FORMER_OP_ADD_AF', 'P4J_FORMER_OP_SUB_AF', 'P4J_FORMER_OP_MUL_AF', 'P4J_FORMER_OP_DIV_AF', 'P4J_FORMER_OP_MOD_AF', 'P4J_FORMER_OP_LE_AF', 'P4J_FORMER_OP_LT_AF', 'P4J_FORMER_OP_GE_AF', 'P4J_FORMER_OP_GT_AF', 'P4J_FORMER_OP_EQ_AF', 'P4J_FORMER_OP_NE_AF', 'P4J_FORMER_UOP_INC_AF', 'P4J_FORMER_UOP_DEC_AF', 'P4J_FORMER_ASSIGN_LHS_AF', 'P4J_FORMER_ASSIGN_ZERO_AF', 'P4J_FORMER_ASSIGN_CONST_AF', 'P4J_FORMER_CHANGED_AF', 'P4J_FORMER_DEREF_AF', 'P4J_FORMER_INDEX_AF', 'P4J_FORMER_MEMBER_ACCESS_AF', 'P4J_FORMER_CALLEE_AF', 'P4J_FORMER_CALL_ARGUMENT_AF', 'P4J_FORMER_ABST_V_AF', 'P4J_FORMER_STMT_LABEL_AF', 'P4J_FORMER_STMT_LOOP_AF', 'P4J_FORMER_STMT_ASSIGN_AF', 'P4J_FORMER_STMT_CALL_AF', 'P4J_FORMER_STMT_COND_AF', 'P4J_FORMER_STMT_CONTROL_AF', 'P4J_FORMER_R_STMT_ASSIGN_AF', 'P4J_FORMER_R_STMT_CALL_AF', 'P4J_FORMER_R_STMT_COND_AF', 'P4J_FORMER_R_STMT_CONTROL_AF', 'P4J_FORMER_MODIFIED_VF', 'P4J_FORMER_MODIFIED_SIMILAR_VF', 'P4J_FORMER_FUNC_ARGUMENT_VF', 'P4J_FORMER_MEMBER_VF', 'P4J_FORMER_LOCAL_VARIABLE_VF', 'P4J_FORMER_GLOBAL_VARIABLE_VF', 'P4J_FORMER_ZERO_CONST_VF', 'P4J_FORMER_NONZERO_CONST_VF', 'P4J_FORMER_STRING_LITERAL_VF', 'P4J_FORMER_SIZE_LITERAL_VF', 'P4J_LATER_INSERT_CONTROL_RF', 'P4J_LATER_INSERT_GUARD_RF', 'P4J_LATER_INSERT_STMT_RF', 'P4J_LATER_REPLACE_COND_RF', 'P4J_LATER_REPLACE_STMT_RF', 'P4J_LATER_REMOVE_PARTIAL_IF', 'P4J_LATER_REMOVE_STMT', 'P4J_LATER_REMOVE_WHOLE_IF', 'P4J_LATER_REMOVE_WHOLE_BLOCK', 'P4J_LATER_OP_ADD_AF', 'P4J_LATER_OP_SUB_AF', 'P4J_LATER_OP_MUL_AF', 'P4J_LATER_OP_DIV_AF', 'P4J_LATER_OP_MOD_AF', 'P4J_LATER_OP_LE_AF', 'P4J_LATER_OP_LT_AF', 'P4J_LATER_OP_GE_AF', 'P4J_LATER_OP_GT_AF', 'P4J_LATER_OP_EQ_AF', 'P4J_LATER_OP_NE_AF', 'P4J_LATER_UOP_INC_AF', 'P4J_LATER_UOP_DEC_AF', 'P4J_LATER_ASSIGN_LHS_AF', 'P4J_LATER_ASSIGN_ZERO_AF', 'P4J_LATER_ASSIGN_CONST_AF', 'P4J_LATER_CHANGED_AF', 'P4J_LATER_DEREF_AF', 'P4J_LATER_INDEX_AF', 'P4J_LATER_MEMBER_ACCESS_AF', 'P4J_LATER_CALLEE_AF', 'P4J_LATER_CALL_ARGUMENT_AF', 'P4J_LATER_ABST_V_AF', 'P4J_LATER_STMT_LABEL_AF', 'P4J_LATER_STMT_LOOP_AF', 'P4J_LATER_STMT_ASSIGN_AF', 'P4J_LATER_STMT_CALL_AF', 'P4J_LATER_STMT_COND_AF', 'P4J_LATER_STMT_CONTROL_AF', 'P4J_LATER_R_STMT_ASSIGN_AF', 'P4J_LATER_R_STMT_CALL_AF', 'P4J_LATER_R_STMT_COND_AF', 'P4J_LATER_R_STMT_CONTROL_AF', 'P4J_LATER_MODIFIED_VF', 'P4J_LATER_MODIFIED_SIMILAR_VF', 'P4J_LATER_FUNC_ARGUMENT_VF', 'P4J_LATER_MEMBER_VF', 'P4J_LATER_LOCAL_VARIABLE_VF', 'P4J_LATER_GLOBAL_VARIABLE_VF', 'P4J_LATER_ZERO_CONST_VF', 'P4J_LATER_NONZERO_CONST_VF', 'P4J_LATER_STRING_LITERAL_VF', 'P4J_LATER_SIZE_LITERAL_VF', 'P4J_SRC_INSERT_CONTROL_RF', 'P4J_SRC_INSERT_GUARD_RF', 'P4J_SRC_INSERT_STMT_RF', 'P4J_SRC_REPLACE_COND_RF', 'P4J_SRC_REPLACE_STMT_RF', 'P4J_SRC_REMOVE_PARTIAL_IF', 'P4J_SRC_REMOVE_STMT', 'P4J_SRC_REMOVE_WHOLE_IF', 'P4J_SRC_REMOVE_WHOLE_BLOCK', 'P4J_SRC_OP_ADD_AF', 'P4J_SRC_OP_SUB_AF', 'P4J_SRC_OP_MUL_AF', 'P4J_SRC_OP_DIV_AF', 'P4J_SRC_OP_MOD_AF', 'P4J_SRC_OP_LE_AF', 'P4J_SRC_OP_LT_AF', 'P4J_SRC_OP_GE_AF', 'P4J_SRC_OP_GT_AF', 'P4J_SRC_OP_EQ_AF', 'P4J_SRC_OP_NE_AF', 'P4J_SRC_UOP_INC_AF', 'P4J_SRC_UOP_DEC_AF', 'P4J_SRC_ASSIGN_LHS_AF', 'P4J_SRC_ASSIGN_ZERO_AF', 'P4J_SRC_ASSIGN_CONST_AF', 'P4J_SRC_CHANGED_AF', 'P4J_SRC_DEREF_AF', 'P4J_SRC_INDEX_AF', 'P4J_SRC_MEMBER_ACCESS_AF', 'P4J_SRC_CALLEE_AF', 'P4J_SRC_CALL_ARGUMENT_AF', 'P4J_SRC_ABST_V_AF', 'P4J_SRC_STMT_LABEL_AF', 'P4J_SRC_STMT_LOOP_AF', 'P4J_SRC_STMT_ASSIGN_AF', 'P4J_SRC_STMT_CALL_AF', 'P4J_SRC_STMT_COND_AF', 'P4J_SRC_STMT_CONTROL_AF', 'P4J_SRC_R_STMT_ASSIGN_AF', 'P4J_SRC_R_STMT_CALL_AF', 'P4J_SRC_R_STMT_COND_AF', 'P4J_SRC_R_STMT_CONTROL_AF', 'P4J_SRC_MODIFIED_VF', 'P4J_SRC_MODIFIED_SIMILAR_VF', 'P4J_SRC_FUNC_ARGUMENT_VF', 'P4J_SRC_MEMBER_VF', 'P4J_SRC_LOCAL_VARIABLE_VF', 'P4J_SRC_GLOBAL_VARIABLE_VF', 'P4J_SRC_ZERO_CONST_VF', 'P4J_SRC_NONZERO_CONST_VF', 'P4J_SRC_STRING_LITERAL_VF', 'P4J_SRC_SIZE_LITERAL_VF', 'codeMove', 'condBlockExcAdd', 'condBlockOthersAdd', 'condBlockRem', 'condBlockRetAdd', 'constChange', 'copyPaste', 'expArithMod', 'expLogicExpand', 'expLogicMod', 'expLogicReduce', 'missNullCheckN', 'missNullCheckP', 'notClassified', 'singleLine', 'unwrapIfElse', 'unwrapMethod', 'unwrapTryCatch', 'wrapsElse', 'wrapsIf', 'wrapsIfElse', 'wrapsLoop', 'wrapsMethod', 'wrapsTryCatch', 'wrongMethodRef', 'wrongVarRef']
-
-                # xgb_1 SHAP
-                explainer_tree1 = shap.TreeExplainer(xgb1,)
-                x_test_xgb1 = pd.DataFrame(x_test_xgb1, columns=Bert_feature_name)
-                shap_values_tree1 = explainer_tree1.shap_values(x_test_xgb1, )
-                # plt.subplot(1, 2, 2)
-                plt.subplots_adjust(left=0.2, right=0.9, top=0.9, bottom=0.1)
-                shap.summary_plot(shap_values_tree1, x_test_xgb1, max_display=10, plot_size=(10, 5))
-                plt.savefig('test.png')
-                plt.clf()
-                plt.subplots_adjust(left=0.2, right=0.9, top=0.9, bottom=0.1)
-                shap.summary_plot(shap_values_tree1, x_test_xgb1, plot_type="bar", max_display=10)
-                plt.clf()
-
-                # xgb_2 SHAP
-                explainer_tree2 = shap.TreeExplainer(xgb2,)
-                x_test_xgb2 = pd.DataFrame(x_test_xgb2, columns=ODS_feature_name)
-                shap_values_tree2 = explainer_tree2.shap_values(x_test_xgb2, )
-                # plt.subplot(1, 2, 2)
-                plt.subplots_adjust(left=0.37, right=0.97, top=0.9, bottom=0.1)
-                shap.summary_plot(shap_values_tree2, x_test_xgb2, max_display=10, plot_size=(10, 5))
-                plt.clf()
-                plt.subplots_adjust(left=0.37, right=0.97, top=0.9, bottom=0.1)
-                shap.summary_plot(shap_values_tree2, x_test_xgb2, plot_type="bar", max_display=10)
-                plt.clf()
-
-                # xgb_all SHAP
-                explainer_tree = shap.TreeExplainer(xgb_all,)
-                x_test = pd.DataFrame(x_test, columns=Bert_feature_name+ODS_feature_name)
-                shap_values_tree = explainer_tree.shap_values(x_test, )
-                plt.subplots_adjust(left=0.165, right=0.97, top=0.9, bottom=0.1)
-                shap.summary_plot(shap_values_tree, x_test, max_display=10)
-                plt.clf()
-                plt.subplots_adjust(left=0.165, right=0.97, top=0.9, bottom=0.1)
-                shap.summary_plot(shap_values_tree, x_test, plot_type="bar", max_display=10)
-                plt.clf()
-
-                # interaction
-                shap_interaction_values = shap.TreeExplainer(xgb_all).shap_interaction_values(x_test)
-                shap.summary_plot(shap_interaction_values, x_test, max_display=5)
-
-                shap.dependence_plot(("singleLine", "L-1187"), shap_interaction_values, x_test, display_features=x_test)
-                shap.dependence_plot('singleLine', shap_interaction_values, x_test, interaction_index='L-533',
-                                     show=False)
-
-                # analysis single sample for the last time
-                self.sample_analysis(learned_incorrectness, engineered_incorrectness, combine_incorrectness, patch_test, x_test, x_test_xgb1, x_test_xgb2, shap_values_tree, shap_values_tree1, shap_values_tree2, explainer_tree, explainer_tree1, explainer_tree2)
+        # calculate SHAP value
+        # if self.algorithm == 'xgb_venn':
+        #     self.shap_value(xgb1, x_test_xgb1, xgb2, x_test_xgb2, xgb_all, x_test, learned_incorrectness, engineered_incorrectness, combine_incorrectness, patch_test)
 
         return output2
 

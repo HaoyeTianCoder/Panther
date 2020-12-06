@@ -113,14 +113,14 @@ if __name__ == '__main__':
     path_dataset = cfg.path_dataset
     dataset_name = cfg.dataset_name
     version = cfg.version
-    w2v = cfg.wcv
-    # w2v = 'Doc'
+    # w2v = cfg.wcv
+    w2v = 'CC2Vec'
 
     path_dataset = '/Users/haoye.tian/Documents/University/data/PatchCollectingV2UniqueToken'
     dataset_name = 'PatchCollectingV2UniqueToken'
     version = 'V2U'
 
-    task = 'save_npy'
+    task = 'experiment'
     print('TASK: {}'.format(task))
 
     if task == 'deduplicate':

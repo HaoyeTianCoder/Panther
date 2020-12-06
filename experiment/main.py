@@ -114,7 +114,9 @@ if __name__ == '__main__':
     dataset_name = cfg.dataset_name
     version = cfg.version
     w2v = cfg.wcv
-    # w2v = 'Doc'
+
+    # w2v = 'CC2Vec'
+    # version = 'V2U'
 
     task = 'experiment'
     print('TASK: {}'.format(task))
@@ -156,15 +158,16 @@ if __name__ == '__main__':
         fea_used = 'combine'
 
         if fea_used == 'learned':
-            # algorithm = 'lr'
+            # algorithm = 'xgb'
             algorithm = 'dnn'
         elif fea_used == 'engineered':
-            # algorithm = 'dnn'
-            algorithm = 'xgb'
+            algorithm = 'dnn'
+            # algorithm = 'xgb'
         elif fea_used == 'combine':
             # algorithm = 'wide_deep'
-            # algorithm = 'dnn_dnn_venn'
-            algorithm = 'xgb_venn'
+            # algorithm = 'lr'
+            algorithm = 'dnn_cnn'
+            # algorithm = 'xgb_venn'
             # algorithm = 'lr_xgb'
             # algorithm = 'xgb_xgb'
 
