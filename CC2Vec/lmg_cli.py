@@ -2,11 +2,11 @@ import argparse
 import pickle
 import re
 from os import walk, path
-from lmg_padding import processing_data
-from lmg_utils import mini_batches, commit_msg_label
+from CC2Vec.lmg_padding import processing_data
+from CC2Vec.lmg_utils import mini_batches, commit_msg_label
 from tqdm import tqdm
 import torch
-from lmg_cc2ftr_model import HierachicalRNN
+from CC2Vec.lmg_cc2ftr_model import HierachicalRNN
 
 def read_args_lmg():
     parser = argparse.ArgumentParser()
@@ -53,12 +53,15 @@ def get_patch_cc2v(patch):
             if line != '':
                 if line.startswith('@@') or line.startswith('diff') or line.startswith('index'):
                     continue
-                if line.startswith('---') or line.startswith('PATCH_DIFF_ORIG=---'):
+                if line == '+++':
+                    newline = 'ppp <nl> '
+                    lines += newline
+                elif line.startswith('---') or line.startswith('PATCH_DIFF_ORIG=---'):
                     newline = re.split(pattern=p,string=line.split(' ')[1].strip())
                     newline = 'mmm ' + ' '.join(newline) + ' <nl> '
                     lines += newline
                 elif line.startswith('+++'):
-                    newline = re.split(pattern=p,string=line.split(' ')[1].strip())
+                    newline = re.split(pattern=p, string=line.split(' ')[1].strip())
                     newline = 'ppp ' + ' '.join(newline) + ' <nl> '
                     lines += newline
                 else:

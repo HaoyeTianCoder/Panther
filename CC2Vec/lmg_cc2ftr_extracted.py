@@ -1,7 +1,7 @@
-from lmg_utils import mini_batches, commit_msg_label
+from CC2Vec.lmg_utils import mini_batches, commit_msg_label
 from tqdm import tqdm
 import torch
-from lmg_cc2ftr_model import HierachicalRNN
+from CC2Vec.lmg_cc2ftr_model import HierachicalRNN
 import pickle
 
 def extracted_cc2ftr(data, params):
