@@ -2,7 +2,7 @@ import os
 
 # path = '/Users/haoye.tian/Downloads/PatchesAndScript/Patches/Dcorrect/DeepRepair/Math'
 # path = '/Users/haoye.tian/Downloads/PatchesAndScript'
-path = '/Users/haoye.tian/Documents/University/data/PatchCollecting/SequenceR'
+path = '/Users/haoye.tian/Documents/University/data/PatchCollectingV1/GenProgA'
 
 cnt = 0
 for root, dirs, files in os.walk(path):

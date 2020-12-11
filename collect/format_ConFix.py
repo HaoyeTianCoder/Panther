@@ -1,7 +1,7 @@
 import os
 import shutil
 
-path = '/Users/haoye.tian/Documents/University/data/PatchCollectingV2UniqueTokenFix/ConFix'
+path = '/Users/haoye.tian/Documents/University/data/PatchCollectingV2/ConFix'
 
 def format():
     for root, dirs, files in os.walk(path):
@@ -72,12 +72,19 @@ def move():
     for root, dirs, files in os.walk(path):
         for file in files:
             if file.endswith('.patch'):
-                project = file.split('-')[1]
-                # project = project.lower()
-                id = file.split('-')[2]
+                if 'V2' in path:
+                    project = file.split('-')[2]
+                    id = file.split('-')[3]
+                else:
+                    project = file.split('-')[1]
+                    id = file.split('-')[2]
+
                 name = file.split('.')[0]
                 buggy = name + '-s.java'
                 fixed = name + '-t.java'
+
+                l = file.split('.')[0].split('-')
+                original_buggy = '-'.join([l[0], l[2], l[3], l[4]]) + '-s.java'
 
                 feature_name = 'features_' + buggy + '->' + fixed + '.json'
 
@@ -85,11 +92,15 @@ def move():
                 if not os.path.exists(new_path):
                     os.makedirs(new_path)
 
-                if not project in root:
+                if not project in root or not project in new_path:
                     shutil.copy(os.path.join(root, file), new_path)
                     shutil.copy(os.path.join(root, buggy), new_path)
                     shutil.copy(os.path.join(root, fixed), new_path)
-                    shutil.copy(os.path.join(root, feature_name), new_path)
+
+                    if os.path.exists(os.path.join(root, original_buggy)):
+                        shutil.copy(os.path.join(root, original_buggy), new_path)
+                    if os.path.exists(os.path.join(root, feature_name)):
+                        shutil.copy(os.path.join(root, feature_name), new_path)
 
 # format()
 # label()

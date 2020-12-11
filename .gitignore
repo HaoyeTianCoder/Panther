@@ -133,3 +133,4 @@ dmypy.json
 .idea/
 *.npy
 /data_vector_*
+.DS_Store

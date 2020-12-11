@@ -12,32 +12,64 @@ import pickle
 from CC2Vec import lmg_cc2ftr_interface
 
 def engineered_features(path_json):
-    engineered_vector = []
+    other_vector = []
+    P4J_vector = []
     repair_patterns = []
     try:
         with open(path_json, 'r') as f:
             feature_json = json.load(f)
             features_list = feature_json['files'][0]['features']
-            for i in range(len(features_list)):
-                dict_fea = features_list[i]
-                if 'repairPatterns' in dict_fea.keys():
-                        # continue
-                        for k,v in dict_fea['repairPatterns'].items():
-                            repair_patterns.append(int(v))
+            other = features_list[0]
+            P4J = features_list[-2]
+            RP = features_list[-1]
+
+            '''
+            # other
+            for k,v in other.items():
+                # if k.startswith('FEATURES_BINARYOPERATOR'):
+                #     for k2,v2 in other[k].items():
+                #         for k3,v3 in other[k][k2].items():
+                #             if v3 == 'true':
+                #                 other_vector.append('1')
+                #             elif v3 == 'false':
+                #                 other_vector.append('0')
+                #             else:
+                #                 other_vector.append('0.5')
+                if k.startswith('S'):
+                    if k.startswith('S6'):
+                        continue
+                    other_vector.append(v)
                 else:
-                    value = list(dict_fea.values())[0]
-                    engineered_vector.append(value)
+                    continue
+            '''
+
+            # P4J
+            for k,v in P4J.items():
+                P4J_vector.append(v)
+
+            # repair pattern
+            for k,v in RP['repairPatterns'].items():
+                repair_patterns.append(v)
+
+            # for i in range(len(features_list)):
+            #     dict_fea = features_list[i]
+            #     if 'repairPatterns' in dict_fea.keys():
+            #             # continue
+            #             for k,v in dict_fea['repairPatterns'].items():
+            #                 repair_patterns.append(int(v))
+            #     else:
+            #         value = list(dict_fea.values())[0]
+            #         engineered_vector.append(value)
     except Exception as e:
         print('name: {}, exception: {}'.format(path_json, e))
         return []
 
-    if engineered_vector == [] or repair_patterns == [] or len(repair_patterns) != 26 or len(engineered_vector + repair_patterns) != 182:
-    # if engineered_vector == []:
+    if len(P4J_vector) != 156 or len(repair_patterns) != 26:
         print('name: {}, exception: {}'.format(path_json, 'null feature or shape error'))
         return []
 
     # return engineered_vector
-    return engineered_vector + repair_patterns
+    return P4J_vector + repair_patterns
 
 def save_npy(path_dataset, w2v, other, version):
     total = -1
@@ -98,14 +130,14 @@ def save_npy(path_dataset, w2v, other, version):
                 if len(learned_vector) != len(all_learned_vector[0]) or len(engineered_vector) != len(all_engineered_vector[0]):
                     raise Exception('shape error')
     # save
-    folder = '../data_vector_' + version + '_' + w2v + '/'
+    folder = '../data_vector_' + version + '_' + w2v
     if not os.path.exists(folder):
         os.makedirs(folder)
-    path_learned_features = folder + 'learned_' + w2v + '.npy'
-    path_engineered_features = folder + 'engineered_' + other + '.npy'
-    path_labels = folder + 'labels.npy'
+    path_learned_features = folder + '/learned_' + w2v + '.npy'
+    path_engineered_features = folder + '/engineered_' + other + '.npy'
+    path_labels = folder + '/labels.npy'
 
-    f = open(folder + 'record.txt', 'w+')
+    f = open(folder + '/record.txt', 'w+')
     f.write(record)
     f.close()
     np.save(path_learned_features, all_learned_vector, allow_pickle=False)

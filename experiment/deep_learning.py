@@ -33,10 +33,10 @@ def get_dnn(dimension):
 def get_dnn_4engineered(dimension):
     input_engineered_tensor = Input(shape=(dimension,))
     engineered_tensor = Dense(1024, activation='tanh')(input_engineered_tensor)
-    # engineered_tensor = Dense(1024, activation='tanh')(engineered_tensor)
     engineered_tensor = Dense(1024, activation='tanh')(engineered_tensor)
+    # engineered_tensor = Dense(1024, activation='tanh')(engineered_tensor)
 
-    engineered_tensor = Dense(512, activation='sigmoid')(engineered_tensor)
+    # engineered_tensor = Dense(512, activation='sigmoid')(engineered_tensor)
     output_tensor = Dense(1, activation='sigmoid')(engineered_tensor)
 
     model = models.Model(inputs=input_engineered_tensor, outputs=output_tensor)
@@ -95,7 +95,7 @@ def get_dnn_dnn(dimension_learned, dimension_engineered):
     input_engineered_tensor = Input(shape=(dimension_engineered,))
     engineered_tensor = Dense(1024, activation='tanh')(input_engineered_tensor)
     engineered_tensor = Dense(1024, activation='tanh')(engineered_tensor)
-    engineered_tensor = Dense(512, activation='tanh')(engineered_tensor)
+    # engineered_tensor = Dense(512, activation='tanh')(engineered_tensor)
 
     # engineered_tensor = Dense(128, activation='sigmoid')(engineered_tensor)
 
@@ -120,10 +120,10 @@ def get_dnn_cnn(dimension_learned, dimension_engineered):
     input_engineered_tensor = Input(shape=(dimension_engineered,))
     # CNN
     engineered_tensor = Reshape((dimension_engineered, 1))(input_engineered_tensor)
-    engineered_tensor = Conv1D(32, (50), activation='relu')(engineered_tensor)
-    engineered_tensor = MaxPool1D((2))(engineered_tensor)
-    engineered_tensor = Conv1D(32, (50), activation='relu')(engineered_tensor)
-    engineered_tensor = MaxPool1D((2))(engineered_tensor)
+    engineered_tensor = Conv1D(256, (50), activation='relu')(engineered_tensor)
+    engineered_tensor = MaxPool1D((8))(engineered_tensor)
+    # engineered_tensor = Conv1D(32, (50), activation='relu')(engineered_tensor)
+    # engineered_tensor = MaxPool1D((2))(engineered_tensor)
     engineered_tensor = Flatten()(engineered_tensor)
 
     # engineered_tensor = Dense(1, activation='sigmoid')(engineered_tensor)

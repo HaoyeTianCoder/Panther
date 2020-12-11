@@ -7,10 +7,9 @@ import json
 
 class Config:
     def __init__(self):
-        # self.defects4j_buggy = '/Users/haoye.tian/Documents/University/project/defects4j_buggy'
-        self.path_dataset = '/Users/haoye.tian/Documents/University/data/PatchCollectingV3UniqueToken'
-        self.dataset_name = 'PatchCollectingV3UniqueToken'
-        self.version = 'V3U'
+        self.defects4j_buggy = '/Users/haoye.tian/Documents/University/project/defects4j_buggy'
+        self.path_dataset = '/Users/haoye.tian/Documents/University/data/PatchCollectingV1UniqueCross'
+        self.version = 'V1U'
         self.wcv = 'Bert'
         self.learned_feature = ''
         self.engineered_feature = ''

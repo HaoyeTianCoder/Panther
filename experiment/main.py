@@ -1,12 +1,16 @@
-from config_default import *
-from common import preprocess, feature_extract, sample
-from experiment import predict_cv, train_doc
+# from config_default import *
+import predict_cv, train_doc
 from preprocess import deduplicate, obtain_ods_feature, save_feature
 import pandas as pd
+import argparse
+import sys
+sys.path.append("..")
+from config_default import *
 
 class Experiment:
-    def __init__(self, fea_used, path_learned_feature, path_engineered_feature, path_labels, record, split_method, algorithm, combine_method=None):
+    def __init__(self, fea_used, w2v, path_learned_feature, path_engineered_feature, path_labels, record, split_method, algorithm, combine_method=None):
         self.fea_used = fea_used
+        self.w2v = w2v
         self.combine_method = combine_method
         self.split_method = split_method
         self.algorithm = algorithm
@@ -29,7 +33,7 @@ class Experiment:
         # load data
         if not os.path.exists(self.path_learned_feature) or not os.path.exists(self.path_engineered_feature) or not os.path.exists(self.path_labels):
             # logging.info('miss the path of the datset ......')
-            raise Exception('miss the path of the datset ......')
+            raise Exception('miss the path of the datset: {} ......'.format(self.path_learned_feature))
         output = '------------------------------------\n'
         output += 'Loading dataset:\n'
         
@@ -64,7 +68,7 @@ class Experiment:
     def train_predict(self, ):
         output1 = '------------------------------------\n'
         output1 += 'Experiment design: \n'
-        output1 += 'Feature used: {}. Combine_method: {}. ML_algorithm: {}\n'.format(self.fea_used, self.combine_method, self.algorithm)
+        output1 += 'Feature used: {}. W2V: {}. ML_algorithm: {}\n'.format(self.fea_used, self.w2v, self.algorithm)
         output1 += '------------------------------------\n'
         output1 += 'Result: \n'
 
@@ -107,25 +111,44 @@ class Experiment:
         with open(out_path,'a+') as file:
             file.write(self.result)
 
+
+parser = argparse.ArgumentParser(description='Test for argparse')
+parser.add_argument('--w2v', '-w', help='word2vector',)
+parser.add_argument('--version', '-v', help='dataset verison', default='V1U')
+parser.add_argument('--path', '-p', help='absolute path of dataset', )
+parser.add_argument('--task', '-t', help='task', )
+args = parser.parse_args()
+
 if __name__ == '__main__':
     # config
     cfg = Config()
+
     path_dataset = cfg.path_dataset
-    dataset_name = cfg.dataset_name
     version = cfg.version
     w2v = cfg.wcv
+
+    w2v = 'CC2Vec'
+    version = 'V1UCross'
+
+    # w2v = 'CC2Vec'
+    # version = 'V1U'
+
+    # w2v = 'Bert'
+    # version = 'V2U'
 
     # w2v = 'CC2Vec'
     # version = 'V2U'
 
     task = 'experiment'
-    print('TASK: {}'.format(task))
+    # task = args.task
 
+    print('TASK: {}'.format(task))
     if task == 'deduplicate':
         # drop same patch
         if 'Unique' in path_dataset:
             print('already deduplicated!')
         else:
+            dataset_name = path_dataset.split('/')[-1]
             path_dataset, dataset_name = deduplicate.deduplicate_by_token_with_location(dataset_name, path_dataset)
 
     elif task == 'train_doc':
@@ -145,10 +168,12 @@ if __name__ == '__main__':
     elif task == 'experiment':
         # start experiment
         print('version: {}  w2c: {}'.format(version, w2v))
-        path_learned_feature = '../data_vector_'+version+'_'+w2v+'/learned_'+w2v+'.npy'
-        path_engineered_feature = '../data_vector_'+version+'_'+w2v+'/engineered_ods.npy'
-        path_labels = '../data_vector_'+version+'_'+w2v+'/labels.npy'
-        record = '../data_vector_'+version+'_'+w2v+'/record.txt'
+        folder = '../data_vector_'+version+'_'+w2v
+
+        path_learned_feature = folder+'/learned_'+w2v+'.npy'
+        path_engineered_feature = folder+'/engineered_ods.npy'
+        path_labels = folder+'/labels.npy'
+        record = folder+'/record.txt'
 
         split_method = 'cvfold'
         combine_method = ''
@@ -158,15 +183,15 @@ if __name__ == '__main__':
         fea_used = 'combine'
 
         if fea_used == 'learned':
-            # algorithm = 'xgb'
-            algorithm = 'dnn'
+            # algorithm = 'dnn'
+            algorithm = 'xgb'
         elif fea_used == 'engineered':
-            algorithm = 'dnn'
-            # algorithm = 'xgb'
+            algorithm = 'xgb'
+            # algorithm = 'nb'
         elif fea_used == 'combine':
             # algorithm = 'wide_deep'
             # algorithm = 'lr'
-            algorithm = 'dnn_cnn'
+            algorithm = 'dnn_dnn_venn'
             # algorithm = 'xgb_venn'
             # algorithm = 'lr_xgb'
             # algorithm = 'xgb_xgb'
@@ -174,7 +199,7 @@ if __name__ == '__main__':
             # combine_method = 'normal'
             # combine_method = 'weight'
 
-        e = Experiment(fea_used, path_learned_feature, path_engineered_feature, path_labels, record, split_method, algorithm, combine_method )
+        e = Experiment(fea_used, w2v, path_learned_feature, path_engineered_feature, path_labels, record, split_method, algorithm, combine_method )
         e.run()
 
         

@@ -3,7 +3,6 @@ import shutil
 from subprocess import *
 from nltk.tokenize import word_tokenize
 
-
 def prepare_legal_file(path):
     for root, dirs, files in os.walk(path):
         for file in files:
@@ -93,7 +92,7 @@ def deduplicate_by_content_with_location(dataset_name, path_dataset):
 
 
 def deduplicate_by_token_with_location(dataset_name, path_dataset):
-    new_dataset_name = dataset_name + 'UniqueToken'
+    new_dataset_name = dataset_name + 'Unique'
     new_dataset_path = path_dataset.replace(dataset_name, new_dataset_name)
     unique_dict = {}
     pre = exception = post = repeat = 0
@@ -159,8 +158,8 @@ def deduplicate_by_token_with_location(dataset_name, path_dataset):
     return new_dataset_path, new_dataset_name
 
 if __name__ == '__main__':
-    path = '/Users/haoye.tian/Documents/University/data/PatchCollecting/'
-    prepare_legal_file(path)
+    # path = '/Users/haoye.tian/Documents/University/data/PatchCollecting/'
+    # prepare_legal_file(path)
 
     # v2 contains ods feature
     dataset_name = 'PatchCollectingV2'
@@ -170,4 +169,4 @@ if __name__ == '__main__':
     # deduplicate_by_content_with_location(path2)
 
     # by token content with location number
-    # deduplicate_by_token_with_location(dataset_name, path_dataset)
+    deduplicate_by_token_with_location(dataset_name, path_dataset)
