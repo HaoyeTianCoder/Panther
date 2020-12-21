@@ -21,11 +21,13 @@ def extract4normal(tool):
 
             project = file.split('-')[1]
             id = file.split('-')[2]
-            path_target_buggy = os.path.join(root, file.replace('.patch', '.buggy'))
-            path_target_fixed = os.path.join(root, file.replace('.patch', '.fixed'))
+            path_target_buggy = os.path.join(root, file.replace('.patch', '-s.java'))
+            path_target_fixed = os.path.join(root, file.replace('.patch', '-t.java'))
 
             # obtain buggy file
-            obtain_buggy(root, file, project, id, path_target_buggy, tool)
+            n = obtain_buggy(root, file, project, id, path_target_buggy, tool)
+            if n== ' ':
+                continue
 
             # parse patch
             fix_operation = parse_patch(root, file, project, id, tool)
@@ -72,6 +74,7 @@ def extract4ssFix2():
             # obtain buggy file
             obtain_buggy(root, file, project, id, path_target_buggy, tool)
 
+
             # parse patch
             fix_operation = parse_patch(root, file, project, id, tool)
 
@@ -87,6 +90,11 @@ def extract4ssFix2():
 def obtain_buggy(root, file, project, id, path_target_buggy, tool):
     # obtain buggy file
     path_buggy_file = ''
+
+    fsize = os.path.getsize(os.path.join(root, file))
+    if fsize < 5:
+        os.remove(os.path.join(root, file))
+        return ' '
 
     if tool in J_projects:
         with open(os.path.join(root, file), 'r+') as f:
@@ -406,3 +414,5 @@ if __name__ == '__main__':
     # extract4normal(tool='iFixR')
 
     # extract4normal(tool='DynaMoth')
+
+    extract4normal(tool='GenProgA')
