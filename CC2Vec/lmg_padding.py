@@ -20,6 +20,7 @@ def get_diff_data(commit, type_code):
                     pass
                 else:
                     lines.append(c)
+                    # pass
             elif type_code == 'removed':
                 if c.startswith('-'):
                     lines.append(c[1:].strip())
@@ -28,6 +29,7 @@ def get_diff_data(commit, type_code):
                     pass
                 else:
                     lines.append(c)
+                    # pass
     return lines
 
 def check_diff_data(data):

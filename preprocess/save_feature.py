@@ -15,13 +15,14 @@ def engineered_features(path_json):
     other_vector = []
     P4J_vector = []
     repair_patterns = []
+    repair_patterns2 = []
     try:
         with open(path_json, 'r') as f:
             feature_json = json.load(f)
             features_list = feature_json['files'][0]['features']
-            other = features_list[0]
-            P4J = features_list[-2]
-            RP = features_list[-1]
+            P4J = features_list[:-2]
+            RP = features_list[-2]
+            RP2 = features_list[-1]
 
             '''
             # other
@@ -44,12 +45,18 @@ def engineered_features(path_json):
             '''
 
             # P4J
-            for k,v in P4J.items():
-                P4J_vector.append(v)
+            for i in range(len(P4J)):
+                dict = P4J[i]
+                value = list(dict.values())[0]
+                P4J_vector.append(value)
 
             # repair pattern
             for k,v in RP['repairPatterns'].items():
                 repair_patterns.append(v)
+
+            # repair pattern 2
+            for k,v in RP2.items():
+                repair_patterns2.append(v)
 
             # for i in range(len(features_list)):
             #     dict_fea = features_list[i]
@@ -64,12 +71,12 @@ def engineered_features(path_json):
         print('name: {}, exception: {}'.format(path_json, e))
         return []
 
-    if len(P4J_vector) != 156 or len(repair_patterns) != 26:
+    if len(P4J_vector) != 156 or len(repair_patterns) != 26 or len(repair_patterns2) != 13:
         print('name: {}, exception: {}'.format(path_json, 'null feature or shape error'))
         return []
 
     # return engineered_vector
-    return P4J_vector + repair_patterns
+    return P4J_vector + repair_patterns + repair_patterns2
 
 def save_npy(path_dataset, w2v, other, version):
     total = -1
@@ -112,8 +119,10 @@ def save_npy(path_dataset, w2v, other, version):
                 if w2v == 'CC2Vec':
                     learned_vector = lmg_cc2ftr_interface.learned_feature(path_patch, load_model='../CC2Vec/cc2ftr.pt', dictionary=dictionary)
                     learned_vector = list(learned_vector[0])
-                else:
+                elif w2v == 'Bert' or w2v == 'Doc':
                     learned_vector = learned_feature(path_patch, w2v)
+                else:
+                    raise
                 # learned_vector = [1,2,3,4]
                 if learned_vector == []:
                     continue
@@ -124,7 +133,7 @@ def save_npy(path_dataset, w2v, other, version):
 
                 print('process {}/{}, patch name: {}'.format(cnt, total, patch))
                 # f.write('{} {} {}\n'.format(cnt, name, 'success'))
-                record += '{} {} {}\n'.format(cnt, name, 'success')
+                record += '{} {} {}\n'.format(cnt, str(label)+'-'+name, 'success')
 
                 cnt += 1
                 if len(learned_vector) != len(all_learned_vector[0]) or len(engineered_vector) != len(all_engineered_vector[0]):
@@ -146,8 +155,8 @@ def save_npy(path_dataset, w2v, other, version):
 
 def learned_feature(path_patch, w2v):
     try:
-        bugy_all = get_diff_files_frag(path_patch, type='patched')
-        patched_all = get_diff_files_frag(path_patch, type='buggy')
+        bugy_all = get_diff_files_frag(path_patch, type='buggy')
+        patched_all = get_diff_files_frag(path_patch, type='patched')
     except Exception as e:
         print('name: {}, exception: {}'.format(path_patch, e))
         return []
@@ -166,15 +175,15 @@ def learned_feature(path_patch, w2v):
     patched_vec = patched_vec.reshape((1, -1))
 
     # embedding feature cross
-    subtract, multiple, cos, euc = multi_diff_features(bug_vec, patched_vec)
-    # embedding = subtract
+    # subtract, multiple, cos, euc = multi_diff_features(bug_vec, patched_vec)
+    # embedding = np.hstack((subtract, multiple, cos, euc,))
 
-    embedding = np.hstack((subtract, multiple, cos, euc,))
+    embedding = subtraction(bug_vec, patched_vec)
 
     return list(embedding.flatten())
 
 def subtraction(buggy, patched):
-    return buggy - patched
+    return patched - buggy
 
 def multiplication(buggy, patched):
     return buggy * patched

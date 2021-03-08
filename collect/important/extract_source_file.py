@@ -2,7 +2,7 @@ from config_default import *
 import os, shutil
 from subprocess import *
 
-kui_tools = ['AVATAR', 'FixMiner', 'TBar', 'kPAR','iFixR','DynaMoth']
+kui_tools = ['AVATAR', 'FixMiner', 'TBar', 'kPAR','iFixR','DynaMoth', 'Developer']
 J_projects = ['jKali', 'jMutRepair', 'Cardumen']
 A_projects = ['GenProgA', 'KaliA', 'RSRepairA']
 
@@ -17,7 +17,7 @@ def extract4normal(tool):
         for file in files:
             if not file.endswith('.patch'):
                 continue
-            print('processing {}: {}'.format(cnt, file))
+            # print('processing {}: {}'.format(cnt, file))
 
             project = file.split('-')[1]
             id = file.split('-')[2]
@@ -26,17 +26,9 @@ def extract4normal(tool):
 
             # obtain buggy file
             n = obtain_buggy(root, file, project, id, path_target_buggy, tool)
-            if n== ' ': # nothing found
+            if n== 'exp': # nothing found
+                print('wrong {}: {}'.format(cnt, file))
                 continue
-
-            # parse patch
-            fix_operation = parse_patch(root, file, project, id, tool)
-
-            # obtain fixed
-            fixed_final_file = obtain_fixed(root, file, project, id, fix_operation, path_target_buggy)
-
-            # save to fixed file
-            save_fixed(fixed_final_file, path_target_fixed)
 
             cnt += 1
 
@@ -96,36 +88,55 @@ def obtain_buggy(root, file, project, id, path_target_buggy, tool):
         os.remove(os.path.join(root, file))
         return ' '
 
-    if tool in J_projects:
-        with open(os.path.join(root, file), 'r+') as f:
-            for line in f:
-                if line.startswith('++'):
-                        path_line = line.split(' ')[1].strip()
-                        discrete = path_line.split('/')
-                        path_buggy_file = '/' + '/'.join(discrete[3:])
-                        path_buggy_file = path_buggy_file[:-4] + '.java'
-    else:
-        with open(os.path.join(root, file), 'r+') as f:
-            for line in f:
-                if line.startswith('--'):
-                    if tool in kui_tools:
-                        path_buggy_file = line.split(' ')[1].strip()[1:]
-                    elif tool in A_projects:
-                        path_line = line.split(' ')[1].strip()
-                        path_line = path_line.split('\t')[0]
-                        discrete = path_line.split('/')
-                        path_buggy_file = '/' + '/'.join(discrete[3:])
-                    else:
-                        path_buggy_file = line.split(' ')[1].strip()
-                    if tool == 'DeepRepair':
-                        path_buggy_file = path_buggy_file.replace('//','/')
-                    break
+    try:
+        if tool in J_projects:
+            with open(os.path.join(root, file), 'r+') as f:
+                for line in f:
+                    if line.startswith('++'):
+                            path_line = line.split(' ')[1].strip()
+                            discrete = path_line.split('/')
+                            path_buggy_file = '/' + '/'.join(discrete[3:])
+                            path_buggy_file = path_buggy_file[:-4] + '.java'
+        else:
+            with open(os.path.join(root, file), 'r+') as f:
+                for line in f:
+                    if line.startswith('--'):
+                        if tool in kui_tools:
+                            path_buggy_file = line.split(' ')[1].strip()[1:]
+                        elif tool in A_projects:
+                            path_line = line.split(' ')[1].strip()
+                            path_line = path_line.split('\t')[0]
+                            discrete = path_line.split('/')
+                            path_buggy_file = '/' + '/'.join(discrete[3:])
+                        else:
+                            path_buggy_file = line.split(' ')[1].strip()
+
+                        if tool == 'DeepRepair':
+                            path_buggy_file = path_buggy_file.replace('//','/')
+                        elif tool == 'PraPR':
+                            if project == 'Math' and int(id) >= 85:
+                                path_buggy_file = '/src/java/' + path_buggy_file
+                            elif project == 'Lang' and int(id) >= 36:
+                                path_buggy_file = '/src/java/' + path_buggy_file
+
+                            elif project == 'Chart':
+                                path_buggy_file = '/source/' + path_buggy_file
+                            elif project == 'Closure':
+                                path_buggy_file = '/src/' + path_buggy_file
+                            elif project == 'Lang' or project == 'Math' or project == 'Time':
+                                path_buggy_file = '/src/main/java/' + path_buggy_file
+                            elif project == 'Mockito':
+                                path_buggy_file = '/src/' + path_buggy_file
+                        break
+    except Exception as e:
+        return 'exp'
     if path_buggy_file == '':
         raise
     bug_id = project + '_' + id
     path_buggy_file_repo = os.path.join(defects4j_buggy, bug_id) + path_buggy_file
 
     shutil.copyfile(path_buggy_file_repo, path_target_buggy)
+    return 'success'
 
 def obtain_buggy_without_src(root, file, project, id):
     # obtain buggy file
@@ -366,11 +377,12 @@ if __name__ == '__main__':
     defects4j_buggy = cfg.defects4j_buggy
     path_patch = cfg.path_dataset
     tools = os.listdir(path_patch)
+    cnt = 0
 
     for tool in tools:
-        if tool == 'Developer':
-            continue
         extract4normal(tool=tool)
+        cnt += 1
+        print(cnt)
 
     # extract_source_file(defects4j_buggy, path_patch, tools)
 

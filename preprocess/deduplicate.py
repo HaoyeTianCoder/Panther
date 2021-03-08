@@ -18,8 +18,8 @@ def prepare_legal_file(path):
                 old_buggy = name + '.buggy'
                 old_fixed = name + '.fixed'
 
-                new_buggy = name + '-s.java'
-                new_fixed = name + '-t.java'
+                new_buggy = name + '_s.java'
+                new_fixed = name + '_t.java'
 
                 shutil.copy(os.path.join(root, old_patch), os.path.join(new_path, new_patch))
                 shutil.copy(os.path.join(root, old_buggy), os.path.join(new_path, new_buggy))
@@ -75,8 +75,8 @@ def deduplicate_by_content_with_location(dataset_name, path_dataset):
                         os.makedirs(new_path)
 
                     patch = file
-                    buggy = name + '-s.java'
-                    fixed = name + '-t.java'
+                    buggy = name + '_s.java'
+                    fixed = name + '_t.java'
                     feature = 'features_' + buggy + '->' + fixed + '.json'
 
                     shutil.copy(os.path.join(root, patch), os.path.join(new_path, patch))

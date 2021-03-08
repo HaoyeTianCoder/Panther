@@ -1,8 +1,10 @@
 dir=/Users/haoye.tian/Documents/University/project/defects4j_buggy/
+export PATH=$PATH:/Users/haoye.tian/Documents/University/project/defects4j/framework/bin
+
 proj=Chart
 for bugId in $(seq 1 26)
 do
-	defects4j checkout -p $proj -v ${bugId}b -w ${dir}${proj}_${bugId}
+	      defects4j checkout -p $proj -v ${bugId}b -w ${dir}${proj}_${bugId}
 done
 
 proj=Closure

@@ -7,7 +7,7 @@ import json
 class Config:
     def __init__(self):
         self.defects4j_buggy = '/Users/haoye.tian/Documents/University/project/defects4j_buggy'
-        self.path_patch = '/Users/haoye.tian/Documents/University/data/PatchCollectingV1'
+        self.path_patch = '/Users/haoye.tian/Documents/University/data/PatchCollectingTOSEM'
         self.tools = ['RSRepairA']
 
     def __init__2(self):

@@ -17,10 +17,10 @@ from sklearn.metrics import roc_curve, auc, accuracy_score, recall_score, precis
 
 def get_dnn(dimension):
     input_embeddings_tensor = Input(shape=(dimension,))
-    embeddings_tensor = Dense(1024, activation='tanh')(input_embeddings_tensor)  # 100为神经元
+    embeddings_tensor = Dense(512, activation='tanh')(input_embeddings_tensor)  # 100为神经元
     # for _ in range(3):   # DNN层数，该为3层
-    embeddings_tensor = Dense(512, activation='tanh')(embeddings_tensor)
-    embeddings_tensor = Dense(512, activation='tanh')(embeddings_tensor)
+    embeddings_tensor = Dense(128, activation='tanh')(embeddings_tensor)
+    embeddings_tensor = Dense(128, activation='tanh')(embeddings_tensor)
     # embeddings_tensor = Dense(64, activation='tanh')(embeddings_tensor)
     output_tensor = Dense(1, activation='sigmoid')(embeddings_tensor)
 
@@ -32,8 +32,8 @@ def get_dnn(dimension):
 
 def get_dnn_4engineered(dimension):
     input_engineered_tensor = Input(shape=(dimension,))
-    engineered_tensor = Dense(1024, activation='tanh')(input_engineered_tensor)
-    engineered_tensor = Dense(1024, activation='tanh')(engineered_tensor)
+    engineered_tensor = Dense(128, activation='tanh')(input_engineered_tensor)
+    engineered_tensor = Dense(64, activation='tanh')(engineered_tensor)
     # engineered_tensor = Dense(1024, activation='tanh')(engineered_tensor)
 
     # engineered_tensor = Dense(512, activation='sigmoid')(engineered_tensor)
@@ -65,10 +65,10 @@ def get_cnn():
 
 def get_wide_deep(dimension_learned, dimension_engineered):
     input_embeddings_tensor = Input(shape=(dimension_learned,))
-    embeddings_tensor = Dense(1024, activation='tanh')(input_embeddings_tensor)  # 100为神经元
+    embeddings_tensor = Dense(512, activation='tanh')(input_embeddings_tensor)  # 100为神经元
     # for _ in range(3):   # DNN层数，该为3层
-    embeddings_tensor = Dense(512, activation='tanh')(embeddings_tensor)
-    embeddings_tensor = Dense(512, activation='tanh')(embeddings_tensor)
+    embeddings_tensor = Dense(128, activation='tanh')(embeddings_tensor)
+    embeddings_tensor = Dense(128, activation='tanh')(embeddings_tensor)
     # embeddings_tensor = Dense(64, activation='tanh')(embeddings_tensor)
 
     input_fe_tensor = Input(shape=(dimension_engineered,))
@@ -85,16 +85,16 @@ def get_wide_deep(dimension_learned, dimension_engineered):
 
 def get_dnn_dnn(dimension_learned, dimension_engineered):
     input_embeddings_tensor = Input(shape=(dimension_learned,))
-    embeddings_tensor = Dense(1024, activation='tanh')(input_embeddings_tensor)  # 100为神经元
+    embeddings_tensor = Dense(512, activation='tanh')(input_embeddings_tensor)  # 100为神经元
     # for _ in range(3):   # DNN层数，该为3层
-    embeddings_tensor = Dense(512, activation='tanh')(embeddings_tensor)
-    embeddings_tensor = Dense(512, activation='tanh')(embeddings_tensor)
+    embeddings_tensor = Dense(128, activation='tanh')(embeddings_tensor)
+    embeddings_tensor = Dense(128, activation='tanh')(embeddings_tensor)
 
     # embeddings_tensor = Dense(1, activation='sigmoid')(embeddings_tensor)
 
     input_engineered_tensor = Input(shape=(dimension_engineered,))
-    engineered_tensor = Dense(1024, activation='tanh')(input_engineered_tensor)
-    engineered_tensor = Dense(1024, activation='tanh')(engineered_tensor)
+    engineered_tensor = Dense(128, activation='tanh')(input_engineered_tensor)
+    engineered_tensor = Dense(64, activation='tanh')(engineered_tensor)
     # engineered_tensor = Dense(512, activation='tanh')(engineered_tensor)
 
     # engineered_tensor = Dense(128, activation='sigmoid')(engineered_tensor)

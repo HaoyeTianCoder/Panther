@@ -79,7 +79,7 @@ class Experiment:
         kfold = 10
 
         # init prediction
-        pd = predict_cv.Prediction(self.dataset, self.labels, self.record,self.feature1_length, self.algorithm, split_method, kfold)
+        pd = predict_cv.Prediction(self.dataset, self.labels, self.record, self.feature1_length, self.algorithm, split_method, kfold)
 
         # train and predict
         if split_method == 'cvfold':
@@ -127,8 +127,8 @@ if __name__ == '__main__':
     version = cfg.version
     w2v = cfg.wcv
 
-    w2v = 'CC2Vec'
-    version = 'V1UCross'
+    # w2v = 'CC2Vec'
+    # version = 'V1UCross'
 
     # w2v = 'CC2Vec'
     # version = 'V1U'
@@ -161,6 +161,7 @@ if __name__ == '__main__':
         obtain_ods_feature.obtain_ods_features(path_dataset)
 
     elif task == 'save_npy':
+
         # save learned feature and engineered feature to npy for prediction later
         other = 'ods'
         save_feature.save_npy(path_dataset, w2v, other, version)
@@ -178,23 +179,28 @@ if __name__ == '__main__':
         split_method = 'cvfold'
         combine_method = ''
 
-        # fea_used = 'learned'
+        fea_used = 'learned'
         # fea_used = 'engineered'
-        fea_used = 'combine'
+        # fea_used = 'combine'
 
         if fea_used == 'learned':
+            algorithm = 'lr'
+            # algorithm = 'rf'
             # algorithm = 'dnn'
-            algorithm = 'xgb'
         elif fea_used == 'engineered':
-            algorithm = 'xgb'
-            # algorithm = 'nb'
-        elif fea_used == 'combine':
-            # algorithm = 'wide_deep'
             # algorithm = 'lr'
-            algorithm = 'dnn_dnn_venn'
-            # algorithm = 'xgb_venn'
+            algorithm = 'xgb'
+            # algorithm = 'dnn'
+        elif fea_used == 'combine':
             # algorithm = 'lr_xgb'
-            # algorithm = 'xgb_xgb'
+            algorithm = 'xgb_xgb'
+
+            # algorithm = 'lr_combine'
+            # algorithm = 'xgb_combine'
+
+            # algorithm = 'dnn_dnn_venn'
+            # algorithm = 'wide_deep'
+
 
             # combine_method = 'normal'
             # combine_method = 'weight'

@@ -54,6 +54,6 @@ def patching(path):
     print('total: {}, generated: {}'.format(total, generated))
 
 if __name__ == '__main__':
-    path = '/Users/haoye.tian/Documents/University/data/PatchCollectingV1/GenProgA'
+    # path = '/Users/haoye.tian/Documents/University/data/PatchCollectingV1/GenProgA'
     copy_buggy(path)
     patching(path)

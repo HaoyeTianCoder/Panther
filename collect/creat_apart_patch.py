@@ -1,7 +1,4 @@
-import os
-import shutil
-from subprocess import *
-from collect.extract_source_file import *
+from collect.important.extract_source_file import *
 
 path = '/Users/haoye.tian/Documents/University/data/PatchCollectingV1/'
 

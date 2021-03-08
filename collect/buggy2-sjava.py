@@ -4,7 +4,7 @@ import random
 import os
 import shutil
 
-path = '/Users/haoye.tian/Documents/University/data/PatchCollecting'
+path = '/Users/haoye.tian/Documents/University/data/PatchCollectingTOSEM'
 
 for root, dirs, files in os.walk(path):
     for file in files:
@@ -16,7 +16,7 @@ for root, dirs, files in os.walk(path):
             buggy_new = name + '-s.java'
             fixed_new = name + '-t.java'
 
-            new_path = root.replace('PatchCollecting','PatchCollectingV2')
+            new_path = root.replace('PatchCollectingTOSEM','PatchCollectingTOSEM2')
             if not os.path.exists(new_path):
                 os.makedirs(new_path)
             shutil.copy(os.path.join(root, buggy_old), os.path.join(new_path, buggy_new))
