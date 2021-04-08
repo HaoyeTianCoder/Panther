@@ -12,20 +12,26 @@ def obtain_ods_features(path_dataset):
 
                 name = file.split('.')[0]
 
-                buggy = name + '-s.java'
-                fixed = name + '-t.java'
+                buggy = name + '_s.java'
+                fixed = name + '_t.java'
 
-                feature_name = 'features_' + buggy + '->' + fixed + '.json'
+                feature_name = 'features_' + name.split('_')[0] + '.json'
                 if os.path.exists(os.path.join(root, feature_name)):
                     generated += 1
                     continue
 
+                frag = root.split('/')
+                location = '/'.join(frag[:-2])
+
                 # if name == 'patch1-Closure-43-Developer':
                 #     continue
 
-                cmd = 'java -classpath /Users/haoye.tian/Documents/University/project/coming_tian/' \
+                # cmd = 'java -classpath /Users/haoye.tian/Documents/University/project/coming_tian/' \
+                #       'target/coming-0-SNAPSHOT-jar-with-dependencies.jar  fr.inria.coming.main.ComingMain ' \
+                #       '-mode features -parameters cross:false -input filespair -location {}:{} -output {}'.format(os.path.join(root,buggy), os.path.join(root,fixed), root)
+                cmd = 'java -classpath /Users/haoye.tian/Documents/University/project/coming/' \
                       'target/coming-0-SNAPSHOT-jar-with-dependencies.jar  fr.inria.coming.main.ComingMain ' \
-                      '-mode features -parameters cross:false -input filespair -location {}:{} -output {}'.format(os.path.join(root,buggy), os.path.join(root,fixed), root)
+                      '-mode features -parameters cross:false -input files -location {} -output {}'.format(location, root)
                 try:
                     with Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, encoding='utf-8') as p:
                         output, errors = p.communicate(timeout=300)
