@@ -141,15 +141,19 @@ def deduplicate_by_token_with_location(dataset_name, path_dataset):
                         os.makedirs(new_path)
 
                     patch = file
-                    buggy = name + '-s.java'
-                    fixed = name + '-t.java'
+                    buggy = name + '_s.java'
+                    fixed = name + '_t.java'
                     feature = 'features_' + buggy + '->' + fixed + '.json'
 
-                    shutil.copy(os.path.join(root, patch), os.path.join(new_path, patch))
-                    shutil.copy(os.path.join(root, buggy), os.path.join(new_path, buggy))
-                    shutil.copy(os.path.join(root, fixed), os.path.join(new_path, fixed))
-                    if os.path.exists(os.path.join(root, feature)):
-                        shutil.copy(os.path.join(root, feature), os.path.join(new_path, feature))
+                    try:
+                        shutil.copy(os.path.join(root, patch), os.path.join(new_path, patch))
+                        shutil.copy(os.path.join(root, buggy), os.path.join(new_path, buggy))
+                        shutil.copy(os.path.join(root, fixed), os.path.join(new_path, fixed))
+                        if os.path.exists(os.path.join(root, feature)):
+                            shutil.copy(os.path.join(root, feature), os.path.join(new_path, feature))
+                    except Exception as e:
+                        print(e)
+                        continue
 
                     post += 1
 

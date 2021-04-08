@@ -20,7 +20,7 @@ def engineered_features(path_json):
         with open(path_json, 'r') as f:
             feature_json = json.load(f)
             features_list = feature_json['files'][0]['features']
-            P4J = features_list[:-2]
+            P4J = features_list[-3]
             RP = features_list[-2]
             RP2 = features_list[-1]
 
@@ -45,10 +45,12 @@ def engineered_features(path_json):
             '''
 
             # P4J
-            for i in range(len(P4J)):
-                dict = P4J[i]
-                value = list(dict.values())[0]
-                P4J_vector.append(value)
+            if not list(P4J.keys())[100].startswith('P4J'):
+                raise
+            for k,v in P4J.items():
+                # dict = P4J[i]
+                # value = list(dict.values())[0]
+                P4J_vector.append(int(v))
 
             # repair pattern
             for k,v in RP['repairPatterns'].items():
@@ -94,7 +96,7 @@ def save_npy(path_dataset, w2v, other, version):
                 patch = file
                 buggy = name + '-s.java'
                 fixed = name + '-t.java'
-                ods_feature = 'features_' + buggy + '->' + fixed + '.json'
+                ods_feature = 'features_' + name.split('_')[0] + '.json'
 
                 if '/Correct/' in root:
                     label = 1
@@ -175,10 +177,10 @@ def learned_feature(path_patch, w2v):
     patched_vec = patched_vec.reshape((1, -1))
 
     # embedding feature cross
-    # subtract, multiple, cos, euc = multi_diff_features(bug_vec, patched_vec)
-    # embedding = np.hstack((subtract, multiple, cos, euc,))
+    subtract, multiple, cos, euc = multi_diff_features(bug_vec, patched_vec)
+    embedding = np.hstack((subtract, multiple, cos, euc,))
 
-    embedding = subtraction(bug_vec, patched_vec)
+    # embedding = subtraction(bug_vec, patched_vec)
 
     return list(embedding.flatten())
 
