@@ -1,8 +1,11 @@
 import os
 import shutil
 
-path = '/Users/haoye.tian/Documents/University/data/PatchCollectingTOSEM'
-path2 = '/Users/haoye.tian/Documents/University/data/PatchCollectingTOSEM2'
+# path = '/Users/haoye.tian/Documents/University/data/PatchCollectingTOSEM'
+# path2 = '/Users/haoye.tian/Documents/University/data/PatchCollectingTOSEM2'
+
+path = '/Users/haoye.tian/Documents/University/data/otherDeve_sliced_part'
+path2 = '/Users/haoye.tian/Documents/University/data/otherDeve_sliced_part2'
 
 def add_folder(path):
     for root, dirs, files in os.walk(path):
@@ -15,7 +18,8 @@ def add_folder(path):
 
                 folder_name = name.split('-')[0]
 
-                new_root = root.replace('PatchCollectingTOSEM', 'PatchCollectingTOSEM2') + '/' + folder_name
+                # new_root = root.replace('PatchCollectingTOSEM', 'PatchCollectingTOSEM2') + '/' + folder_name
+                new_root = root.replace('otherDeve_sliced_part', 'otherDeve_sliced_part2').replace('patch1', '') + '/' + folder_name
                 if not os.path.exists(new_root):
                     os.makedirs(new_root)
 

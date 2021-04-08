@@ -2,7 +2,7 @@ from config_default import *
 import os, shutil
 from subprocess import *
 
-kui_tools = ['AVATAR', 'FixMiner', 'TBar', 'kPAR','iFixR','DynaMoth', 'Developer']
+kui_tools = ['AVATAR', 'FixMiner', 'TBar', 'kPAR','iFixR','DynaMoth', 'Developer', 'otherDeve_sliced_part2']
 J_projects = ['jKali', 'jMutRepair', 'Cardumen']
 A_projects = ['GenProgA', 'KaliA', 'RSRepairA']
 
@@ -10,8 +10,9 @@ def extract_source_file(defects4j_buggy, path_patch, tools):
     for tool in tools:
         patch_tool = os.path.join(path_patch,tool)
 
-def extract4normal(tool):
+def extract4normal(path_patch, tool):
     cnt = 0
+    total = 0
     path_tool = os.path.join(path_patch, tool)
     for root, dirs, files in os.walk(path_tool):
         for file in files:
@@ -19,18 +20,42 @@ def extract4normal(tool):
                 continue
             # print('processing {}: {}'.format(cnt, file))
 
+            total += 1
+
             project = file.split('-')[1]
             id = file.split('-')[2]
+            patch = os.path.join(root, file)
             path_target_buggy = os.path.join(root, file.replace('.patch', '-s.java'))
             path_target_fixed = os.path.join(root, file.replace('.patch', '-t.java'))
 
             # obtain buggy file
-            n = obtain_buggy(root, file, project, id, path_target_buggy, tool)
-            if n== 'exp': # nothing found
-                print('wrong {}: {}'.format(cnt, file))
+            try:
+                n = obtain_buggy(root, file, project, id, path_target_buggy, tool)
+            except Exception as e:
+            # if n== 'exp': # nothing found
+                print('No buggy file: {}'.format(file))
+                continue
+
+            shutil.copy(path_target_buggy, path_target_fixed)
+
+            cmd = 'patch -p0 --fuzz 3 {} {}'.format(path_target_fixed, patch)
+            try:
+                with Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, encoding='utf-8') as p:
+                    output, errors = p.communicate(timeout=300)
+                    # print(output)
+                    if errors:
+                        raise CalledProcessError(errors, '-1')
+                    if 'FAILED' in output:
+                        print('Failed name: {}'.format(file, ))
+                        continue
+            except Exception as e:
+                print('Exception name: {}'.format(file, ))
                 continue
 
             cnt += 1
+
+            print('{}/{}'.format(cnt, total))
+
 
 # not used
 def extract4ssFix1():
@@ -129,7 +154,7 @@ def obtain_buggy(root, file, project, id, path_target_buggy, tool):
                                 path_buggy_file = '/src/' + path_buggy_file
                         break
     except Exception as e:
-        return 'exp'
+        raise e
     if path_buggy_file == '':
         raise
     bug_id = project + '_' + id
@@ -379,10 +404,14 @@ if __name__ == '__main__':
     tools = os.listdir(path_patch)
     cnt = 0
 
-    for tool in tools:
-        extract4normal(tool=tool)
-        cnt += 1
-        print(cnt)
+    path_patch = '/Users/haoye.tian/Documents/University/data/'
+    tool = 'otherDeve_sliced_part2'
+    extract4normal(path_patch, tool=tool)
+
+    # for tool in tools:
+    #     extract4normal(tool=tool)
+    #     cnt += 1
+    #     print(cnt)
 
     # extract_source_file(defects4j_buggy, path_patch, tools)
 
