@@ -39,12 +39,18 @@ class Prediction:
 
     def shap_value(self, xgb1, x_test_xgb1, xgb2, x_test_xgb2, xgb_all, x_test, learned, engineered, combine, patch_name_test):
         Bert_feature_name = ['B-'+str(i) for i in range(1024)]
+        Bert_cross_feature_name = ['B-'+str(i) for i in range(2050)]
         CC2V_feature_name = ['C-'+str(i) for i in range(240)]
+        CC2V_cross_feature_name = ['C-'+str(i) for i in range(482)]
 
-        if x_test_xgb1.shape[1] == 240:
-            learned_feature_name = CC2V_feature_name
-        elif x_test_xgb1.shape[1] == 1024:
+        if x_test_xgb1.shape[1] == 1024:
             learned_feature_name = Bert_feature_name
+        elif x_test_xgb1.shape[1] == 2050:
+            learned_feature_name = Bert_cross_feature_name
+        elif x_test_xgb1.shape[1] == 240:
+            learned_feature_name = CC2V_feature_name
+        elif x_test_xgb1.shape[1] == 482:
+            learned_feature_name = CC2V_cross_feature_name
         else:
             raise
 
@@ -458,22 +464,23 @@ class Prediction:
             elif self.algorithm == 'nb':
                 clf = GaussianNB().fit(X=x_train, y=y_train)
             elif self.algorithm == 'dnn':
-                if x_train.shape[1] == 1024:
-                    dnn_model = get_dnn(dimension=1024)
+                if x_train.shape[1] == 1024 or x_train.shape[1] == 2050:
+                    dnn_model = get_dnn(dimension=x_train.shape[1])
                 elif x_train.shape[1] == 195 or x_train.shape[1] == 4510:
                     dnn_model = get_dnn_4engineered(dimension=x_train.shape[1])
+                # bert, CC2Vec, Doc2Vec
                 else:
                     dnn_model = get_dnn(dimension=x_train.shape[1])
 
                 callback = [keras.callbacks.EarlyStopping(monitor='auc', patience=1, mode="max", verbose=1),]
                 dnn_model.fit(x_train, y_train, callbacks=callback, batch_size=32, epochs=10, )
             elif self.algorithm == 'dnn_dnn':
-                x_train_lr = x_train[:,:self.feature1_length]
-                x_train_xgb = x_train[:,self.feature1_length:]
-
-                combine_deep_model = get_dnn_dnn(x_train_lr.shape[1], x_train_xgb.shape[1])
+                x_train_learned = x_train[:,:self.feature1_length]
+                x_train_static = x_train[:,self.feature1_length:]
                 callback = [keras.callbacks.EarlyStopping(monitor='auc', patience=1, mode="max", verbose=1), ]
-                combine_deep_model.fit([x_train_lr, x_train_xgb], y_train, callbacks=callback, batch_size=32,
+
+                combine_deep_model = get_dnn_dnn(x_train_learned.shape[1], x_train_static.shape[1])
+                combine_deep_model.fit([x_train_learned, x_train_static], y_train, callbacks=callback, batch_size=32,
                           epochs=10, )
             elif self.algorithm == 'dnn_dnn_venn':
                 x_train_lr = x_train[:,:self.feature1_length]
@@ -697,9 +704,9 @@ class Prediction:
                 combine_incorrectness_all += combine_incorrectness
 
             # calculate SHAP value
-            if self.algorithm == 'xgb_combine':
-                self.shap_value(xgb1, x_test_xgb1, xgb2, x_test_xgb2, xgb_all, x_test, learned_correctness,
-                                engineered_correctness, combine_correctness, patch_name_test)
+            # if self.algorithm == 'xgb_combine':
+            #     self.shap_value(xgb1, x_test_xgb1, xgb2, x_test_xgb2, xgb_all, x_test, learned_correctness,
+            #                     engineered_correctness, combine_correctness, patch_name_test)
             # elif self.algorithm == 'rf_combine':
             #     self.shap_value(rf1, x_test_rf1, rf2, x_test_rf2, rf_all, x_test, learned_correctness,
             #                     engineered_correctness, combine_correctness, patch_name_test)
