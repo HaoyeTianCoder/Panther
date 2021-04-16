@@ -179,26 +179,28 @@ if __name__ == '__main__':
         split_method = 'cvfold'
         combine_method = ''
 
-        fea_used = 'learned'
+        # fea_used = 'learned'
         # fea_used = 'engineered'
-        # fea_used = 'combine'
+        fea_used = 'combine'
 
         if fea_used == 'learned':
-            algorithm = 'lr'
             # algorithm = 'rf'
-            # algorithm = 'dnn'
+            # algorithm = 'xgb'
+            algorithm = 'dnn'
+            # algorithm = 'nb'
         elif fea_used == 'engineered':
             # algorithm = 'lr'
-            algorithm = 'xgb'
-            # algorithm = 'dnn'
+            # algorithm = 'xgb'
+            algorithm = 'dnn'
+            # algorithm = 'rf'
         elif fea_used == 'combine':
             # algorithm = 'lr_xgb'
-            algorithm = 'xgb_xgb'
+            # algorithm = 'xgb_xgb'
 
             # algorithm = 'lr_combine'
             # algorithm = 'xgb_combine'
 
-            # algorithm = 'dnn_dnn_venn'
+            algorithm = 'dnn_dnn_venn'
             # algorithm = 'wide_deep'
 
 
