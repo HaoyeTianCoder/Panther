@@ -79,7 +79,10 @@ def slice_patch2(path, folder, new_folder):
                 with open(os.path.join(new_path, new_name), 'w+') as f:
                     f.write(minus_line + plus_line + patch)
 
-path = '/Users/haoye.tian/Documents/University/data/otherDeve'
-folder = 'otherDeve'
+# split patch into new patch carrying with one file changed(possiblely multiple fixes)
+
+# path = '/Users/haoye.tian/Documents/University/data/otherDeve'
+path = '/Users/haoye.tian/Documents/University/data/Develop_standardize'
+folder = 'Develop_standardize'
 new_folder = folder + '_sliced_part'
 slice_patch2(path, folder, new_folder)
