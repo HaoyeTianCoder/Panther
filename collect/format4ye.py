@@ -39,8 +39,10 @@ def format4Underscore(path, project):
                     os.makedirs(new_root)
 
                 try:
-                    shutil.copy(os.path.join(root, buggy), os.path.join(new_root, new_buggy))
-                    shutil.copy(os.path.join(root, fixed), os.path.join(new_root, new_fixed))
+                    if os.path.exists(os.path.join(root, buggy)):
+                        shutil.copy(os.path.join(root, buggy), os.path.join(new_root, new_buggy))
+                    if os.path.exists(os.path.join(root, fixed)):
+                        shutil.copy(os.path.join(root, fixed), os.path.join(new_root, new_fixed))
                     shutil.copy(os.path.join(root, patch), os.path.join(new_root, new_patch))
                 except Exception as e:
                     print(e)
@@ -48,6 +50,7 @@ def format4Underscore(path, project):
 
 
 
-path = '/Users/haoye.tian/Documents/University/data/PatchCollectingTOSEMYe'
-project = 'PatchCollectingTOSEMYe'
+# path = '/Users/haoye.tian/Documents/University/data/PatchCollectingTOSEMYe'
+path = '/Users/haoye.tian/Documents/University/data/Develop_standardize_sliced_part'
+project = 'Develop_standardize_sliced_part'
 format4Underscore(path, project)
