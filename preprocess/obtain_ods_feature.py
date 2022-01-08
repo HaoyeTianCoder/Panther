@@ -34,7 +34,7 @@ def obtain_ods_features(path_dataset):
                       '-mode features -parameters cross:false -input files -location {} -output {}'.format(location, root)
                 try:
                     with Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, encoding='utf-8') as p:
-                        output, errors = p.communicate(timeout=300)
+                        output, errors = p.communicate(timeout=180)
                         # print(output)
                         # if errors:
                         #     raise CalledProcessError(errors, '-1')

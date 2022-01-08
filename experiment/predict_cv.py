@@ -1,3 +1,4 @@
+import numpy as np
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -15,6 +16,7 @@ import xgboost as xgb
 import lightgbm as lgb
 from sklearn.svm import SVC, LinearSVC
 import sklearn.metrics as metrics
+import os
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, Normalizer
 from sklearn.ensemble import RandomForestClassifier
@@ -68,10 +70,10 @@ class Prediction:
         shap.summary_plot(shap_values_tree1, x_test_xgb1, max_display=10, plot_size=(10, 5))
         plt.savefig('../images/xgb1_shap.png')
         plt.clf()
-        plt.subplots_adjust(left=0.2, right=0.9, top=0.9, bottom=0.1)
-        shap.summary_plot(shap_values_tree1, x_test_xgb1, plot_type="bar", max_display=10)
-        plt.savefig('../images/xgb1_imp.png')
-        plt.clf()
+        # plt.subplots_adjust(left=0.2, right=0.9, top=0.9, bottom=0.1)
+        # shap.summary_plot(shap_values_tree1, x_test_xgb1, plot_type="bar", max_display=10)
+        # plt.savefig('../images/xgb1_imp.png')
+        # plt.clf()
 
         # xgb_2 SHAP
         explainer_tree2 = shap.TreeExplainer(xgb2,)
@@ -82,40 +84,40 @@ class Prediction:
         shap.summary_plot(shap_values_tree2, x_test_xgb2, max_display=10, plot_size=(10, 5))
         plt.savefig('../images/xgb2_shap.png')
         plt.clf()
-        plt.subplots_adjust(left=0.417, right=0.97, top=0.9, bottom=0.1)
-        shap.summary_plot(shap_values_tree2, x_test_xgb2, plot_type="bar", max_display=10)
-        plt.savefig('../images/xgb2_imp.png')
-        plt.clf()
+        # plt.subplots_adjust(left=0.417, right=0.97, top=0.9, bottom=0.1)
+        # shap.summary_plot(shap_values_tree2, x_test_xgb2, plot_type="bar", max_display=10)
+        # plt.savefig('../images/xgb2_imp.png')
+        # plt.clf()
 
         # xgb_all SHAP
         explainer_tree_all = shap.TreeExplainer(xgb_all,)
         x_test = pd.DataFrame(x_test, columns=learned_feature_name+ODS_feature_name)
         shap_values_tree = explainer_tree_all.shap_values(x_test, )
         plt.subplots_adjust(left=0.417, right=0.97, top=0.9, bottom=0.1)
-        shap.summary_plot(shap_values_tree, x_test, max_display=15)
+        shap.summary_plot(shap_values_tree, x_test, max_display=10, plot_size=(10, 5))
         plt.savefig('../images/xgb_all_shap.png')
         plt.clf()
-        plt.subplots_adjust(left=0.417, right=0.97, top=0.9, bottom=0.1)
-        shap.summary_plot(shap_values_tree, x_test, plot_type="bar", max_display=15)
-        plt.savefig('../images/xgb_all_imp.png')
-        plt.clf()
+        # plt.subplots_adjust(left=0.417, right=0.97, top=0.9, bottom=0.1)
+        # shap.summary_plot(shap_values_tree, x_test, plot_type="bar", max_display=10, plot_size=(10, 5))
+        # plt.savefig('../images/xgb_all_imp.png')
+        # plt.clf()
 
 
         # interaction
         shap_interaction_values = explainer_tree_all.shap_interaction_values(x_test)
         shap.summary_plot(shap_interaction_values, x_test, max_display=10)
-        shap.dependence_plot(("singleLine", "B-193"), shap_interaction_values, x_test, display_features=x_test)
-        # shap.dependence_plot(("INSERT_GUARD_RF", "C-256"), shap_interaction_values, x_test, display_features=x_test)
+        # only two features interact, no any other features involved.
+        shap.dependence_plot(("singleLine", "B-1237"), shap_interaction_values, x_test, display_features=x_test)
         plt.savefig('../images/interaction_single.png')
-        # shap.dependence_plot(("rank(1)", "rank(2)"), shap_interaction_values, x_test, display_features=x_test)
+        # except for 'L-1187', the final interaction result of 'singleLine' in figure is influenced by other features .
         # shap.dependence_plot('singleLine', shap_values_tree, x_test, interaction_index='L-1187',)
 
 
         # analysis single sample for the last time
-        # try:
-        #     self.sample_analysis(learned, engineered, combine, patch_name_test, x_test, x_test_xgb1, x_test_xgb2, shap_values_tree, shap_values_tree1, shap_values_tree2, explainer_tree, explainer_tree1, explainer_tree2)
-        # except Exception as e:
-        #     print('not this time')
+        try:
+            self.sample_analysis(learned, engineered, combine, patch_name_test, x_test, x_test_xgb1, x_test_xgb2, shap_values_tree, shap_values_tree1, shap_values_tree2, explainer_tree_all, explainer_tree1, explainer_tree2)
+        except Exception as e:
+            print('not this time')
 
     def sample_analysis(self, learned, engineered, combine, patch_name_test, x_test, x_test_xgb1, x_test_xgb2, shap_values_tree, shap_values_tree1, shap_values_tree2, explainer_tree, explainer_tree1, explainer_tree2):
         learned_set = set(learned)
@@ -181,7 +183,7 @@ class Prediction:
         my_dpi = 150
         plt.figure(figsize=(600 / my_dpi, 600 / my_dpi), dpi=my_dpi)
         a = venn2(subsets=[set(learned_correctness_all), set(combine_correctness_all)],
-                  set_labels=('learned', 'combine'),
+                  set_labels=('learned', 'other'),
                   set_colors=("#01a2d9", "#c72e29"),
                   alpha=0.3,  # 透明度
                   normalize_to=0.6,  # venn图占据figure的比例，1.0为占满
@@ -193,7 +195,7 @@ class Prediction:
         my_dpi = 150
         plt.figure(figsize=(600 / my_dpi, 600 / my_dpi), dpi=my_dpi)
         b = venn2(subsets=[set(learned_incorrectness_all), set(combine_incorrectness_all)],
-                  set_labels=('learned', 'combine'),
+                  set_labels=('learned', 'other'),
                   set_colors=("#01a2d9", "#c72e29"),
                   alpha=0.3,  # 透明度
                   normalize_to=0.6,  # venn图占据figure的比例，1.0为占满
@@ -367,6 +369,8 @@ class Prediction:
         rc = recall_score(y_true=y_true, y_pred=y_pred)
         f1 = 2 * prc * rc / (prc + rc)
 
+        print('Test data size: {}, Incorrect: {}, Correct: {}'.format(len(y_true), y_true.count(0), y_true.count(1)))
+
         # minn = 1
         # for i in range(len(y_true)):
         #     if y_true[i] == 1:
@@ -395,6 +399,217 @@ class Prediction:
         # return , auc_
         return auc_, recall_p, recall_n, acc, prc, rc, f1
 
+    def run_compare(self, ):
+
+        accs, prcs, rcs, f1s, aucs = list(), list(), list(), list(), list()
+        rcs_p, rcs_n = list(), list()
+
+        dataset, labels, record = self.dataset, self.labels, self.record
+        x_train, y_train, x_test, y_test = [], [], [], []
+
+        # patchsim test data
+        patchsim_name, y_patchsim = [], []
+        with open('patchsim_result.txt', 'r+') as f:
+            for line in f:
+                name = line.split(',')[0][:-2]
+                label = int(line.split(',')[1])
+                patchsim_name.append(name)
+                y_patchsim.append(label)
+        for i in range(len(self.record)):
+            patchName = self.record.iloc[i][1][2:]
+            if patchName in patchsim_name:
+                # as test data
+                x_test.append(self.dataset[i])
+                y_test.append(self.labels[i])
+            else:
+                # as train data
+                x_train.append(self.dataset[i])
+                y_train.append(self.labels[i])
+
+        # standard data
+        scaler = StandardScaler().fit(x_train)
+        # scaler = MinMaxScaler().fit(x_train)
+        x_train = scaler.transform(x_train)
+        x_test = scaler.transform(x_test)
+        y_train, y_test = np.array(y_train), np.array(y_test)
+
+        clf = None
+        xgb_params = {'objective': 'binary:logistic', 'verbosity': 0}
+        if self.algorithm == 'lr':
+            clf = LogisticRegression(solver='lbfgs', max_iter=10000).fit(X=x_train, y=y_train)
+        elif self.algorithm == 'lr_combine':
+            x_train_lr = x_train[:, :self.feature1_length]
+            lr = LogisticRegression(solver='lbfgs', max_iter=1000).fit(X=x_train_lr, y=y_train)
+
+            x_train_xgb2 = x_train[:, self.feature1_length:]
+            x_train_xgb2_dmatrix = xgb.DMatrix(x_train_xgb2, label=y_train)
+            xgb2 = xgb.train(params=xgb_params, dtrain=x_train_xgb2_dmatrix, num_boost_round=100)
+
+            clf = LogisticRegression(solver='lbfgs', max_iter=1000).fit(X=x_train, y=y_train)
+        elif self.algorithm == 'rf':
+            clf = RandomForestClassifier(n_estimators=100, ).fit(X=x_train, y=y_train)
+        elif self.algorithm == 'xgb':
+            dtrain = xgb.DMatrix(x_train, label=y_train)
+            clf = xgb.train(params=xgb_params, dtrain=dtrain, num_boost_round=100)
+        elif self.algorithm == 'dnn':
+            if x_train.shape[1] == 1024 or x_train.shape[1] == 2050:
+                dnn_model = get_dnn(dimension=x_train.shape[1])
+            elif x_train.shape[1] == 195 or x_train.shape[1] == 4510:
+                dnn_model = get_dnn_4engineered(dimension=x_train.shape[1])
+            # bert, CC2Vec, Doc2Vec
+            else:
+                dnn_model = get_dnn(dimension=x_train.shape[1])
+
+            callback = [keras.callbacks.EarlyStopping(monitor='auc', patience=1, mode="max", verbose=1), ]
+            dnn_model.fit(x_train, y_train, callbacks=callback, batch_size=32, epochs=10, )
+
+        # prediction
+        if self.algorithm == 'lgb':
+            x_test_lgb = x_test
+            y_pred = clf.predict(x_test_lgb)
+        elif self.algorithm == 'xgb':
+            x_test_xgb = x_test
+            x_test_xgb_dmatrix = xgb.DMatrix(x_test_xgb, label=y_test)
+            y_pred = clf.predict(x_test_xgb_dmatrix)
+        elif self.algorithm == 'dnn':
+            y_pred = dnn_model.predict(x_test)[:, 0]
+        else:
+            y_pred = clf.predict_proba(x_test)[:, 1]
+
+        # for i in range(1, 10):
+        #     y_pred_tn = [1 if p >= i / 10.0 else 0 for p in y_pred]
+        #     tn, fp, fn, tp = confusion_matrix(y_test, y_pred_tn).ravel()
+        #     print('i:{}'.format(i / 10), end=' ')
+        #     print('TP: %d -- TN: %d -- FP: %d -- FN: %d' % (tp, tn, fp, fn))
+
+        auc_, recall_p, recall_n, acc, prc, rc, f1 = self.evaluation_metrics(y_true=list(y_test), y_pred_prob=list(y_pred))
+        # print('Accuracy: %f -- Precision: %f -- Recall: %f -- F1: %f -- AUC: %f' % (
+        #     np.array(acc).mean(), np.array(prc).mean(), np.array(rc).mean(), np.array(f1).mean(),
+        #     np.array(auc_).mean()))
+
+        output2 = '------------------------------------\n'
+        output2 += 'Accuracy: %f -- Precision: %f -- Recall: %f -- F1: %f -- AUC: %f' % (
+            np.array(acc).mean(), np.array(prc).mean(), np.array(rc).mean(), np.array(f1).mean(),
+            np.array(auc_).mean())
+
+        y_pred_int = [1 if p >= 0.5 else 0 for p in y_pred]
+        index_c = [i for i in range(len(list(y_test))) if list(y_test)[i] == 1]
+        index_c_learned = [str(i) for i in index_c if y_pred_int[i] == 1]
+        index_c_patchsim = [str(i) for i in index_c if y_patchsim[i] == 1]
+
+        index_in = [i for i in range(len(list(y_test))) if list(y_test)[i] == 0]
+        index_in_learned = [str(i) for i in index_in if y_pred_int[i] == 0]
+        index_in_patchsim = [str(i) for i in index_in if y_patchsim[i] == 0]
+        self.draw_venn2(index_c_learned, index_c_patchsim, index_in_learned, index_in_patchsim)
+
+
+        # import sklearn.metrics as metrics
+        # # calculate the fpr and tpr for all thresholds of the classification
+        # preds = y_pred
+        # fpr, tpr, threshold = metrics.roc_curve(y_test, preds)
+        # roc_auc = metrics.auc(fpr, tpr)
+
+        return output2
+
+    def run_test_patchsim(self, fea_used):
+
+        path_testdata_vector = '../data_vector_TestData_Bert'
+
+        skf = StratifiedKFold(n_splits=self.kfold, shuffle=True)
+        accs, prcs, rcs, f1s, aucs = list(), list(), list(), list(), list()
+        rcs_p, rcs_n = list(), list()
+        learned_correctness_all, engineered_correctness_all, combine_correctness_all, learned_incorrectness_all, engineered_incorrectness_all, combine_incorrectness_all = list(), list(), list(), list(), list(), list()
+
+        if not os.path.exists(path=path_testdata_vector):
+            # logging.info('miss the path of the test data ......')
+            raise Exception('miss the path of the datset: {} ......'.format(path_testdata_vector))
+
+        test_data = None
+        if fea_used == 'learned':
+            test_data = np.load(path_testdata_vector + '/learned_Bert.npy')
+        elif fea_used == 'engineered':
+            test_data = np.load(path_testdata_vector + '/engineered_ods.npy', allow_pickle=True)
+        elif fea_used == 'combine':
+            learned_feature = np.load(path_testdata_vector + '/learned_Bert.npy')
+            engineered_feature = np.load(path_testdata_vector + '/engineered_ods.npy', allow_pickle=True)
+            test_data = np.concatenate((learned_feature, engineered_feature), axis=1)
+            # self.feature1_length = learned_feature.shape[1]
+        else:
+            raise
+        y_test = np.load(path_testdata_vector + '/labels.npy')
+        y_train = self.labels
+
+        # avoid the patches of testing data from appearing in the training data
+        x_train_list = self.dataset.tolist()
+        x_test_list = test_data.tolist()
+        del_index = []
+        for i in range(len(x_train_list)):
+            train = x_train_list[i]
+            if train in x_test_list:
+                del_index.append(i)
+        x_train = np.delete(self.dataset, del_index, axis=0)
+        y_train = np.delete(y_train, del_index, axis=0)
+
+        # standard data
+        scaler = StandardScaler().fit(x_train)
+        # scaler = MinMaxScaler().fit(x_train)
+        x_train = scaler.transform(x_train)
+        x_test = scaler.transform(test_data)
+
+        clf = None
+        xgb_params = {'objective': 'binary:logistic', 'verbosity': 0}
+        if self.algorithm == 'lr':
+            clf = LogisticRegression(solver='lbfgs', max_iter=10000).fit(X=x_train, y=y_train)
+        elif self.algorithm == 'lr_combine':
+            x_train_lr = x_train[:, :self.feature1_length]
+            lr = LogisticRegression(solver='lbfgs', max_iter=1000).fit(X=x_train_lr, y=y_train)
+
+            x_train_xgb2 = x_train[:, self.feature1_length:]
+            x_train_xgb2_dmatrix = xgb.DMatrix(x_train_xgb2, label=y_train)
+            xgb2 = xgb.train(params=xgb_params, dtrain=x_train_xgb2_dmatrix, num_boost_round=100)
+
+            clf = LogisticRegression(solver='lbfgs', max_iter=1000).fit(X=x_train, y=y_train)
+        elif self.algorithm == 'rf':
+            clf = RandomForestClassifier(n_estimators=100, ).fit(X=x_train, y=y_train)
+        elif self.algorithm == 'xgb':
+            dtrain = xgb.DMatrix(x_train, label=y_train)
+            clf = xgb.train(params=xgb_params, dtrain=dtrain, num_boost_round=100)
+
+        # prediction
+        if self.algorithm == 'lgb':
+            x_test_lgb = x_test
+            y_pred = clf.predict(x_test_lgb)
+        elif self.algorithm == 'xgb':
+            x_test_xgb = x_test
+            x_test_xgb_dmatrix = xgb.DMatrix(x_test_xgb, label=y_test)
+            y_pred = clf.predict(x_test_xgb_dmatrix)
+        else:
+            y_pred = clf.predict_proba(x_test)[:, 1]
+
+        for i in range(1, 10):
+            y_pred_tn = [1 if p >= i / 10.0 else 0 for p in y_pred]
+            tn, fp, fn, tp = confusion_matrix(y_test, y_pred_tn).ravel()
+            print('i:{}'.format(i / 10), end=' ')
+            print('TP: %d -- TN: %d -- FP: %d -- FN: %d' % (tp, tn, fp, fn))
+
+        auc_, recall_p, recall_n, acc, prc, rc, f1 = self.evaluation_metrics(y_true=y_test, y_pred_prob=y_pred)
+        # print('Accuracy: %f -- Precision: %f -- Recall: %f -- F1: %f -- AUC: %f' % (
+        #     np.array(acc).mean(), np.array(prc).mean(), np.array(rc).mean(), np.array(f1).mean(),
+        #     np.array(auc_).mean()))
+
+        output2 = '------------------------------------\n'
+        output2 += 'Accuracy: %f -- Precision: %f -- Recall: %f -- F1: %f -- AUC: %f' % (
+            np.array(acc).mean(), np.array(prc).mean(), np.array(rc).mean(), np.array(f1).mean(),
+            np.array(auc_).mean())
+
+
+        import sklearn.metrics as metrics
+        # calculate the fpr and tpr for all thresholds of the classification
+        preds = y_pred
+        fpr, tpr, threshold = metrics.roc_curve(y_test, preds)
+        roc_auc = metrics.auc(fpr, tpr)
+
+        return output2
     def run_cvfold(self, ):
 
         # scaler = StandardScaler()
@@ -683,7 +898,7 @@ class Prediction:
             # self.confusion_matrix(y_pred, y_test)
 
             # main metrics
-            auc_, recall_p, recall_n, acc, prc, rc, f1 = self.evaluation_metrics(y_true=y_test, y_pred_prob=y_pred)
+            auc_, recall_p, recall_n, acc, prc, rc, f1 = self.evaluation_metrics(y_true=list(y_test), y_pred_prob=list(y_pred))
 
             accs.append(acc)
             prcs.append(prc)
@@ -707,6 +922,7 @@ class Prediction:
             # if self.algorithm == 'xgb_combine':
             #     self.shap_value(xgb1, x_test_xgb1, xgb2, x_test_xgb2, xgb_all, x_test, learned_correctness,
             #                     engineered_correctness, combine_correctness, patch_name_test)
+
             # elif self.algorithm == 'rf_combine':
             #     self.shap_value(rf1, x_test_rf1, rf2, x_test_rf2, rf_all, x_test, learned_correctness,
             #                     engineered_correctness, combine_correctness, patch_name_test)

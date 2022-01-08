@@ -96,6 +96,7 @@ def deduplicate_by_token_with_location(dataset_name, path_dataset):
     new_dataset_path = path_dataset.replace(dataset_name, new_dataset_name)
     unique_dict = {}
     pre = exception = post = repeat = 0
+    pre_co, pre_in, post_co, post_in = 0, 0, 0, 0
     for root, dirs, files in os.walk(path_dataset):
         for file in files:
             if file.endswith('.patch'):
@@ -105,19 +106,23 @@ def deduplicate_by_token_with_location(dataset_name, path_dataset):
                 path_patch = os.path.join(root, file)
                 unique_str = ''
                 pre += 1
+                if '/Correct/' in path_patch:
+                    pre_co += 1
+                elif '/Incorrect/' in path_patch:
+                    pre_in += 1
                 print('{}, name: {}'.format(pre, file.split('.')[0]))
                 try:
                     with open(path_patch, 'r') as f:
                         foundAT = False
                         for line in f:
-                            if line.startswith('--') or line.startswith('++'):
+                            if line.startswith('--') or line.startswith('++') or line.strip() == '':
                                 continue
                             if not foundAT and not line.startswith('@@ '):
                                 continue
                             else:
                                 if line.startswith('@@ '):
                                     foundAT = True
-                                    unique_str += ' '.join(word_tokenize(line.strip())) + ' '
+                                    # unique_str += ' '.join(word_tokenize(line.strip())) + ' '
                                 elif line.startswith('-') or line.startswith('+'):
                                     unique_str += ' '.join(word_tokenize(line[1:].strip())) + ' '
                                 else:
@@ -156,8 +161,12 @@ def deduplicate_by_token_with_location(dataset_name, path_dataset):
                         continue
 
                     post += 1
-
+                    if '/Correct/' in path_patch:
+                        post_co += 1
+                    elif '/Incorrect/' in path_patch:
+                        post_in += 1
     print('pre:{}, post:{} ---- exception:{}, repeat:{}'.format(pre, post, exception, repeat))
+    print('pre_correct:{}, pre_incorrect:{}.  post_correct:{}, post_incorrect:{}'.format(pre_co, pre_in, post_co, post_in))
     print('remember change path in config_default.py !!!')
     return new_dataset_path, new_dataset_name
 

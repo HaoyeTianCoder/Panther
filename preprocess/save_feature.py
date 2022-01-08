@@ -122,7 +122,84 @@ def save_npy(path_dataset, w2v, other, version):
                     learned_vector = lmg_cc2ftr_interface.learned_feature(path_patch, load_model='../CC2Vec/cc2ftr.pt', dictionary=dictionary)
                     learned_vector = list(learned_vector[0])
                 elif w2v == 'Bert' or w2v == 'Doc':
-                    learned_vector = learned_feature(path_patch, w2v)
+                    learned_vector, patch_frag = learned_feature(path_patch, w2v)
+                else:
+                    raise
+                # learned_vector = [1,2,3,4]
+                if learned_vector == []:
+                    continue
+
+                all_learned_vector.append(learned_vector)
+                all_engineered_vector.append(engineered_vector)
+                all_label.append(label)
+
+                print('process {}/{}, patch name: {}'.format(cnt, total, patch))
+                # f.write('{} {} {}\n'.format(cnt, name, 'success'))
+                record += '{} {} {}\n'.format(cnt, str(label)+'-'+name, 'success')
+
+                cnt += 1
+                if len(learned_vector) != len(all_learned_vector[0]) or len(engineered_vector) != len(all_engineered_vector[0]):
+                    raise Exception('shape error')
+    # save
+    folder = '../data_vector_' + version + '_' + w2v
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    path_learned_features = folder + '/learned_' + w2v + '.npy'
+    path_engineered_features = folder + '/engineered_' + other + '.npy'
+    path_labels = folder + '/labels.npy'
+
+    f = open(folder + '/record.txt', 'w+')
+    f.write(record)
+    f.close()
+    np.save(path_learned_features, all_learned_vector, allow_pickle=False)
+    np.save(path_engineered_features, all_engineered_vector, allow_pickle=False)
+    np.save(path_labels, all_label, allow_pickle=False)
+
+def save_npy_test(path_dataset, path_testdata, w2v, other, version):
+    total = -1
+    cnt = 0
+    all_learned_vector = []
+    all_engineered_vector = []
+    all_label = []
+    record = ''
+    dictionary = pickle.load(open('../CC2Vec/dict.pkl', 'rb'))
+
+    # coding...
+    for root, dirs, files in os.walk(path_dataset):
+        for file in files:
+            if file.endswith('.patch'):
+                total += 1
+                name = file.split('.')[0]
+                patch = file
+                buggy = name + '-s.java'
+                fixed = name + '-t.java'
+                ods_feature = 'features_' + name.split('_')[0] + '.json'
+
+                if '/Correct/' in root:
+                    label = 1
+                elif '/Incorrect/' in root:
+                    label = 0
+                else:
+                    print('unknow label: {}'.format(name))
+                    raise
+
+                path_patch = os.path.join(root, patch)
+
+                # engineered feature
+                if other == 'ods':
+                    path_json = os.path.join(root, ods_feature)
+                    engineered_vector = engineered_features(path_json)
+                else:
+                    raise
+                if engineered_vector == []:
+                    continue
+
+                # learned feature
+                if w2v == 'CC2Vec':
+                    learned_vector = lmg_cc2ftr_interface.learned_feature(path_patch, load_model='../CC2Vec/cc2ftr.pt', dictionary=dictionary)
+                    learned_vector = list(learned_vector[0])
+                elif w2v == 'Bert' or w2v == 'Doc':
+                    learned_vector, patch_frag = learned_feature(path_patch, w2v)
                 else:
                     raise
                 # learned_vector = [1,2,3,4]
@@ -182,7 +259,7 @@ def learned_feature(path_patch, w2v):
 
     # embedding = subtraction(bug_vec, patched_vec)
 
-    return list(embedding.flatten())
+    return list(embedding.flatten()), bugy_all+patched_all
 
 def subtraction(buggy, patched):
     return patched - buggy

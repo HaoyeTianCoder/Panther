@@ -8,7 +8,7 @@ sys.path.append("..")
 from config_default import *
 
 class Experiment:
-    def __init__(self, fea_used, w2v, path_learned_feature, path_engineered_feature, path_labels, record, split_method, algorithm, combine_method=None):
+    def __init__(self, fea_used, w2v, path_learned_feature, path_engineered_feature, path_testdata, path_labels, record, split_method, algorithm, combine_method=None):
         self.fea_used = fea_used
         self.w2v = w2v
         self.combine_method = combine_method
@@ -19,8 +19,10 @@ class Experiment:
 
         self.path_learned_feature = path_learned_feature
         self.path_engineered_feature = path_engineered_feature
+        self.path_testdata =path_testdata
         self.path_labels = path_labels
         self.path_record = record
+
 
         self.dataset = None
         self.record = None
@@ -60,7 +62,7 @@ class Experiment:
         learned_feature = np.load(path_learned_feature)
         engineered_feature = np.load(path_engineered_feature)
 
-        dataset = np.concatenate((learned_feature, engineered_feature),axis=1)
+        dataset = np.concatenate((learned_feature, engineered_feature), axis=1)
 
         self.dataset = dataset
         self.feature1_length = learned_feature.shape[1]
@@ -68,7 +70,7 @@ class Experiment:
     def train_predict(self, ):
         output1 = '------------------------------------\n'
         output1 += 'Experiment design: \n'
-        output1 += 'Feature used: {}. W2V: {}. ML_algorithm: {}\n'.format(self.fea_used, self.w2v, self.algorithm)
+        output1 += 'Feature used: {}. W2V: {}. ML_algorithm: {}\n'.format(self.fea_used, self.w2v if self.fea_used=='learned' else '', self.algorithm)
         output1 += '------------------------------------\n'
         output1 += 'Result: \n'
 
@@ -84,6 +86,11 @@ class Experiment:
         # train and predict
         if split_method == 'cvfold':
             output2 = pd.run_cvfold()
+        # train and predict
+        elif split_method == 'test_patchsim':
+            output2 = pd.run_test_patchsim(self.fea_used)
+        elif split_method == 'compare':
+            output2 = pd.run_compare()
         elif split_method == 'slice':
             output2 = pd.run_slice()
         else:
@@ -124,6 +131,7 @@ if __name__ == '__main__':
     cfg = Config()
 
     path_dataset = cfg.path_dataset
+    path_testdata = cfg.path_testdata
     version = cfg.version
     w2v = cfg.wcv
 
@@ -151,6 +159,7 @@ if __name__ == '__main__':
             dataset_name = path_dataset.split('/')[-1]
             path_dataset, dataset_name = deduplicate.deduplicate_by_token_with_location(dataset_name, path_dataset)
 
+    # optional
     elif task == 'train_doc':
         path_dataset_all = '/Users/haoye.tian/Documents/University/data/PatchCollectingV2'
         d = train_doc.doc(path_dataset_all)
@@ -161,10 +170,14 @@ if __name__ == '__main__':
         obtain_ods_feature.obtain_ods_features(path_dataset)
 
     elif task == 'save_npy':
-
         # save learned feature and engineered feature to npy for prediction later
         other = 'ods'
         save_feature.save_npy(path_dataset, w2v, other, version)
+
+    elif task == 'save_npy_4test':
+        # for test data
+        other = 'ods'
+        save_feature.save_npy_test(path_dataset, path_testdata, w2v, other, version)
 
     elif task == 'experiment':
         # start experiment
@@ -177,6 +190,7 @@ if __name__ == '__main__':
         record = folder+'/record.txt'
 
         split_method = 'cvfold'
+        # split_method = 'compare'
         combine_method = ''
 
         # fea_used = 'learned'
@@ -185,29 +199,30 @@ if __name__ == '__main__':
 
         if fea_used == 'learned':
             # algorithm = 'rf'
-            # algorithm = 'xgb'
-            algorithm = 'dnn'
-            # algorithm = 'nb'
-        elif fea_used == 'engineered':
+            algorithm = 'xgb'
             # algorithm = 'lr'
+            # algorithm = 'dnn'
+        elif fea_used == 'engineered':
+            # algorithm = 'nb'
             # algorithm = 'xgb'
-            algorithm = 'dnn'
-            # algorithm = 'rf'
+            # algorithm = 'dnn'
+            algorithm = 'rf'
         elif fea_used == 'combine':
-            # algorithm = 'lr_xgb'
+            # algorithm = 'rf_rf'
             # algorithm = 'xgb_xgb'
 
             # algorithm = 'lr_combine'
-            # algorithm = 'xgb_combine'
+            # algorithm = 'rf'
+            algorithm = 'xgb_combine'
 
-            algorithm = 'dnn_dnn_venn'
+            # algorithm = 'dnn_dnn_venn'
             # algorithm = 'wide_deep'
 
 
             # combine_method = 'normal'
             # combine_method = 'weight'
 
-        e = Experiment(fea_used, w2v, path_learned_feature, path_engineered_feature, path_labels, record, split_method, algorithm, combine_method )
+        e = Experiment(fea_used, w2v, path_learned_feature, path_engineered_feature, path_testdata, path_labels, record, split_method, algorithm, combine_method )
         e.run()
 
         
