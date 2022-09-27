@@ -172,7 +172,8 @@ if __name__ == '__main__':
     elif task == 'save_npy':
         # save learned feature and engineered feature to npy for prediction later
         other = 'ods'
-        save_feature.save_npy(path_dataset, w2v, other, version)
+        # save_feature.save_npy(path_dataset, w2v, other, version)
+        save_feature.save_npy_bugids(path_dataset, w2v, other,)
 
     elif task == 'save_npy_4test':
         # for test data
@@ -189,13 +190,14 @@ if __name__ == '__main__':
         path_labels = folder+'/labels.npy'
         record = folder+'/record.txt'
 
-        split_method = 'cvfold'
+        # split_method = 'cvfold'
+        split_method = 'test_patchsim'
         # split_method = 'compare'
         combine_method = ''
 
-        # fea_used = 'learned'
+        fea_used = 'learned'
         # fea_used = 'engineered'
-        fea_used = 'combine'
+        # fea_used = 'combine'
 
         if fea_used == 'learned':
             # algorithm = 'rf'

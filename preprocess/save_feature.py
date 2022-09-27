@@ -88,11 +88,14 @@ def save_npy(path_dataset, w2v, other, version):
     all_label = []
     record = ''
     dictionary = pickle.load(open('../CC2Vec/dict.pkl', 'rb'))
+    bugids_json = {}
     for root, dirs, files in os.walk(path_dataset):
         for file in files:
             if file.endswith('.patch'):
                 total += 1
                 name = file.split('.')[0]
+                project, id = name.split('_')[0].split('-')[1], name.split('_')[0].split('-')[2]
+                project_id = project +'-'+ id
                 patch = file
                 buggy = name + '-s.java'
                 fixed = name + '-t.java'
@@ -105,6 +108,7 @@ def save_npy(path_dataset, w2v, other, version):
                 else:
                     print('unknow label: {}'.format(name))
                     raise
+                patch_id = name + '_' + str(label)
 
                 path_patch = os.path.join(root, patch)
 
@@ -133,6 +137,12 @@ def save_npy(path_dataset, w2v, other, version):
                 all_engineered_vector.append(engineered_vector)
                 all_label.append(label)
 
+                # # saved by project id as key
+                # if not project_id in bugids_json.keys():
+                #     bugids_json[project_id] = [[patch_id, learned_vector, engineered_vector, label]]
+                # else:
+                #     bugids_json[project_id].append([patch_id, learned_vector, engineered_vector, label])
+
                 print('process {}/{}, patch name: {}'.format(cnt, total, patch))
                 # f.write('{} {} {}\n'.format(cnt, name, 'success'))
                 record += '{} {} {}\n'.format(cnt, str(label)+'-'+name, 'success')
@@ -154,6 +164,98 @@ def save_npy(path_dataset, w2v, other, version):
     np.save(path_learned_features, all_learned_vector, allow_pickle=False)
     np.save(path_engineered_features, all_engineered_vector, allow_pickle=False)
     np.save(path_labels, all_label, allow_pickle=False)
+
+def save_npy_bugids(path_dataset, w2v, other, ):
+    if w2v == 'Bert':
+        m = BertClient(check_length=False, check_version=False)
+    elif w2v == 'Doc':
+        m = Doc2Vec.load('../model/Doc_frag_ASE.model')
+    else:
+        m = None
+
+    total = 0
+    cnt = 0
+    all_learned_vector = []
+    all_engineered_vector = []
+    all_label = []
+    record = ''
+    dictionary = pickle.load(open('../CC2Vec/dict.pkl', 'rb'))
+    bugids_json = {}
+    di_learned_vector, di_engineered_vector = -1, -1
+    for root, dirs, files in os.walk(path_dataset):
+        for file in files:
+            if file.endswith('.patch'):
+                total += 1
+                name = file.split('.')[0]
+                project, id = name.split('_')[0].split('-')[1], name.split('_')[0].split('-')[2]
+                project_id = project +'-'+ id
+                patch = file
+                buggy = name + '-s.java'
+                fixed = name + '-t.java'
+                ods_feature = 'features_' + name.split('_')[0] + '.json'
+
+                if '/Correct/' in root:
+                    label = 1
+                elif '/Incorrect/' in root:
+                    label = 0
+                else:
+                    print('unknow label: {}'.format(name))
+                    raise
+                patch_id = name + '_' + str(label)
+
+                path_patch = os.path.join(root, patch)
+
+                # engineered feature
+                if other == 'ods':
+                    path_json = os.path.join(root, ods_feature)
+                    engineered_vector = engineered_features(path_json)
+                else:
+                    raise
+                if engineered_vector == []:
+                    continue
+
+                # learned feature
+                if w2v == 'CC2Vec':
+                    learned_vector = lmg_cc2ftr_interface.learned_feature(path_patch, load_model='../CC2Vec/cc2ftr.pt', dictionary=dictionary)
+                    learned_vector = list(learned_vector[0])
+                elif w2v == 'Bert' or w2v == 'Doc':
+                    learned_vector, patch_frag = learned_feature(path_patch, w2v, m)
+                else:
+                    raise
+                # learned_vector = [1,2,3,4]
+                if learned_vector == []:
+                    continue
+
+                # all_learned_vector.append(learned_vector)
+                # all_engineered_vector.append(engineered_vector)
+                # all_label.append(label)
+
+                # saved by project id as key
+                if not project_id in bugids_json.keys():
+                    bugids_json[project_id] = [[patch_id, learned_vector, engineered_vector, label]]
+                else:
+                    bugids_json[project_id].append([patch_id, learned_vector, engineered_vector, label])
+
+                cnt += 1
+                if cnt == 1:
+                    di_learned_vector, di_engineered_vector = len(learned_vector), len(engineered_vector)
+                elif len(learned_vector) != di_learned_vector or len(engineered_vector) != di_engineered_vector:
+                    raise Exception('shape error')
+
+                print('process {}/{}, patch name: {}'.format(cnt, total, patch))
+                # f.write('{} {} {}\n'.format(cnt, name, 'success'))
+                record += '{} {} {}\n'.format(cnt, patch_id, 'success')
+    # save
+    folder = '../data/'
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    with open(folder + w2v + '.pickle', 'wb') as file:
+        pickle.dump(bugids_json, file)
+    # f = open(folder + '/record.txt', 'w+')
+    # f.write(record)
+    # f.close()
+
+
 
 def save_npy_test(path_dataset, path_testdata, w2v, other, version):
     total = -1
@@ -232,7 +334,7 @@ def save_npy_test(path_dataset, path_testdata, w2v, other, version):
     np.save(path_engineered_features, all_engineered_vector, allow_pickle=False)
     np.save(path_labels, all_label, allow_pickle=False)
 
-def learned_feature(path_patch, w2v):
+def learned_feature(path_patch, w2v, m):
     try:
         bugy_all = get_diff_files_frag(path_patch, type='buggy')
         patched_all = get_diff_files_frag(path_patch, type='patched')
@@ -245,7 +347,7 @@ def learned_feature(path_patch, w2v):
     patched_all_token = word_tokenize(patched_all)
 
     try:
-        bug_vec, patched_vec = output_vec(w2v, bugy_all_token, patched_all_token)
+        bug_vec, patched_vec = output_vec(w2v, bugy_all_token, patched_all_token, m)
     except Exception as e:
         print('name: {}, exception: {}'.format(path_patch, e))
         return []
@@ -281,15 +383,15 @@ def multi_diff_features(buggy, patched):
 
     return subtract, multiple, cos, euc
 
-def output_vec(w2v, bugy_all_token, patched_all_token):
+def output_vec(w2v, bugy_all_token, patched_all_token, m):
 
     if w2v == 'Bert':
-        m = BertClient(check_length=False, check_version=False)
+        # m = BertClient(check_length=False, check_version=False)
         bug_vec = m.encode([bugy_all_token], is_tokenized=True)
         patched_vec = m.encode([patched_all_token], is_tokenized=True)
     elif w2v == 'Doc':
         # m = Doc2Vec.load('../model/doc_file_64d.model')
-        m = Doc2Vec.load('../model/Doc_frag_ASE.model')
+        # m = Doc2Vec.load('../model/Doc_frag_ASE.model')
         bug_vec = m.infer_vector(bugy_all_token, alpha=0.025, steps=300)
         patched_vec = m.infer_vector(patched_all_token, alpha=0.025, steps=300)
     else:
