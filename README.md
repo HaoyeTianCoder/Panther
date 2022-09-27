@@ -1,5 +1,5 @@
 # Panther
-description
+A patch correctness predicting framework
 
 ### Task
 1. deduplicate:
@@ -7,7 +7,7 @@ description
 2. ods_feature: 
   generate ods feature json for patches 
 3. save_npy: 
-  save learned feature and engineered feature to npy for prediction later
+  save learned feature and engineered feature as npy for prediction
 4. experiment: 
   start experiment
 
