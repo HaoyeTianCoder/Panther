@@ -1,7 +1,7 @@
 # from config_default import *
 import numpy as np
 
-import predict_cv2, train_doc
+import predict_cv, train_doc
 from preprocess import deduplicate, obtain_ods_feature, save_feature
 import pandas as pd
 import argparse
