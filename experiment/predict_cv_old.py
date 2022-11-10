@@ -30,27 +30,14 @@ from keras.layers import Dense, Embedding, Dropout, Input, Concatenate
 from experiment.deep_learning import *
 
 class Prediction:
-    def __init__(self, train_features_learned, train_features_engineered, train_features_combine, train_labels, \
-                                    test_features_learned, test_features_engineered, test_features_combine, test_labels, test_infos, algorithm, split_method, fea_used):
-        self.train_features_learned = train_features_learned
-        self.train_features_engineered = train_features_engineered
-        self.train_features_combine = train_features_combine
-        self.train_labels = train_labels
-
-        self.test_features_learned = test_features_learned
-        self.test_features_engineered = test_features_engineered
-        self.test_features_combine = test_features_combine
-        self.test_labels = test_labels
-
-
-        self.test_infos = test_infos
+    def __init__(self, dataset, labels, record, feature1_length, algorithm, split_method, kfold=10, ):
+        self.dataset = dataset
+        self.record = record
+        self.labels = labels
         self.algorithm = algorithm
         self.split_method = split_method
-        self.fea_used = fea_used
-
-        # patchsim data test
-        self.patchsim_name = None
-        self.y_patchsim = None
+        self.kfold = kfold
+        self.feature1_length = feature1_length
 
     def shap_value(self, xgb1, x_test_xgb1, xgb2, x_test_xgb2, xgb_all, x_test, learned, engineered, combine, patch_name_test):
         Bert_feature_name = ['B-'+str(i) for i in range(1024)]
@@ -79,7 +66,7 @@ class Prediction:
         x_test_xgb1 = pd.DataFrame(x_test_xgb1, columns=learned_feature_name)
         shap_values_tree1 = explainer_tree1.shap_values(x_test_xgb1, )
         # plt.subplot(1, 2, 2)
-        plt.subplots_adjust(left=0.2, right=0.9, top=0.9, bottom=0.15)
+        plt.subplots_adjust(left=0.2, right=0.9, top=0.9, bottom=0.1)
         shap.summary_plot(shap_values_tree1, x_test_xgb1, max_display=10, plot_size=(10, 5))
         plt.savefig('../images/xgb1_shap.png')
         plt.clf()
@@ -93,7 +80,7 @@ class Prediction:
         x_test_xgb2 = pd.DataFrame(x_test_xgb2, columns=ODS_feature_name)
         shap_values_tree2 = explainer_tree2.shap_values(x_test_xgb2, )
         # plt.subplot(1, 2, 2)
-        plt.subplots_adjust(left=0.417, right=0.97, top=0.9, bottom=0.15)
+        plt.subplots_adjust(left=0.417, right=0.97, top=0.9, bottom=0.1)
         shap.summary_plot(shap_values_tree2, x_test_xgb2, max_display=10, plot_size=(10, 5))
         plt.savefig('../images/xgb2_shap.png')
         plt.clf()
@@ -106,7 +93,7 @@ class Prediction:
         explainer_tree_all = shap.TreeExplainer(xgb_all,)
         x_test = pd.DataFrame(x_test, columns=learned_feature_name+ODS_feature_name)
         shap_values_tree = explainer_tree_all.shap_values(x_test, )
-        plt.subplots_adjust(left=0.417, right=0.97, top=0.9, bottom=0.15)
+        plt.subplots_adjust(left=0.417, right=0.97, top=0.9, bottom=0.1)
         shap.summary_plot(shap_values_tree, x_test, max_display=10, plot_size=(10, 5))
         plt.savefig('../images/xgb_all_shap.png')
         plt.clf()
@@ -116,14 +103,14 @@ class Prediction:
         # plt.clf()
 
 
-        # # interaction
-        # shap_interaction_values = explainer_tree_all.shap_interaction_values(x_test)
-        # shap.summary_plot(shap_interaction_values, x_test, max_display=10)
-        # # only two features interact, no any other features involved.
-        # shap.dependence_plot(("singleLine", "B-1530"), shap_interaction_values, x_test, display_features=x_test)
-        # plt.savefig('../images/interaction_single.png')
-        # # except for 'L-1187', the final interaction result of 'singleLine' in figure is influenced by other features .
-        # # shap.dependence_plot('singleLine', shap_values_tree, x_test, interaction_index='L-1187',)
+        # interaction
+        shap_interaction_values = explainer_tree_all.shap_interaction_values(x_test)
+        shap.summary_plot(shap_interaction_values, x_test, max_display=10)
+        # only two features interact, no any other features involved.
+        shap.dependence_plot(("singleLine", "B-1237"), shap_interaction_values, x_test, display_features=x_test)
+        plt.savefig('../images/interaction_single.png')
+        # except for 'L-1187', the final interaction result of 'singleLine' in figure is influenced by other features .
+        # shap.dependence_plot('singleLine', shap_values_tree, x_test, interaction_index='L-1187',)
 
 
         # analysis single sample for the last time
@@ -131,7 +118,6 @@ class Prediction:
             self.sample_analysis(learned, engineered, combine, patch_name_test, x_test, x_test_xgb1, x_test_xgb2, shap_values_tree, shap_values_tree1, shap_values_tree2, explainer_tree_all, explainer_tree1, explainer_tree2)
         except Exception as e:
             print('not this time')
-
 
     def sample_analysis(self, learned, engineered, combine, patch_name_test, x_test, x_test_xgb1, x_test_xgb2, shap_values_tree, shap_values_tree1, shap_values_tree2, explainer_tree, explainer_tree1, explainer_tree2):
         learned_set = set(learned)
@@ -349,13 +335,11 @@ class Prediction:
         return learned_correctness, engineered_correctness, combine_correctness, learned_incorrectness, engineered_incorrectness, combine_incorrectness
 
     def confusion_matrix(self, y_pred, y_test):
-        for i in range(1, 100):
-            y_pred_tn = [1 if p >= i / 100.0 else 0 for p in y_pred]
+        for i in range(1, 10):
+            y_pred_tn = [1 if p >= i / 10.0 else 0 for p in y_pred]
             tn, fp, fn, tp = confusion_matrix(y_test, y_pred_tn).ravel()
-            recall_p = tp / (tp + fn)
-            recall_n = tn / (tn + fp)
-            print('i:{}'.format(i / 100), end=' ')
-            print('TP: %d -- TN: %d -- FP: %d -- FN: %d -- +Recall: %.3f -- -Recall: %.3f' % (tp, tn, fp, fn, recall_p, recall_n))
+            print('i:{}'.format(i / 10), end=' ')
+            print('TP: %d -- TN: %d -- FP: %d -- FN: %d' % (tp, tn, fp, fn))
 
     def draw_auc(self, y_pred, y_test):
         # calculate the fpr and tpr for all thresholds of the classification
@@ -375,17 +359,17 @@ class Prediction:
         plt.xlabel('False Positive Rate')
         plt.show()
 
-    def evaluation_metrics(self, y_true, y_pred_prob, t=0.5):
+    def evaluation_metrics(self, y_true, y_pred_prob):
         fpr, tpr, thresholds = roc_curve(y_true=y_true, y_score=y_pred_prob, pos_label=1)
         auc_ = auc(fpr, tpr)
 
-        y_pred = [1 if p >= t else 0 for p in y_pred_prob]
+        y_pred = [1 if p >= 0.5 else 0 for p in y_pred_prob]
         acc = accuracy_score(y_true=y_true, y_pred=y_pred)
         prc = precision_score(y_true=y_true, y_pred=y_pred)
         rc = recall_score(y_true=y_true, y_pred=y_pred)
         f1 = 2 * prc * rc / (prc + rc)
 
-        # print('Test data size: {}, Incorrect: {}, Correct: {}'.format(len(y_true), y_true.count(0), y_true.count(1)))
+        print('Test data size: {}, Incorrect: {}, Correct: {}'.format(len(y_true), y_true.count(0), y_true.count(1)))
 
         # minn = 1
         # for i in range(len(y_true)):
@@ -553,6 +537,15 @@ class Prediction:
         else:
             raise
         y_test = np.load(path_testdata_vector + '/labels.npy')
+        test_patch_names = pd.read_csv(path_testdata_vector + '/record.txt', sep=' ', header=None, names=['index','name','flag'])['name'].values.tolist()
+        test_project_ids = set()
+        for t in test_patch_names:
+            patch_name_without_tool = t.split('_')[0]
+            project, id = patch_name_without_tool.split('-')[2], patch_name_without_tool.split('-')[3]
+            project_id = project + '-' + id
+            test_project_ids.add(project_id)
+
+        train_patch_names = self.record['name'].values.tolist()
         y_train = self.labels
 
         # avoid the patches of testing data from appearing in the training data
@@ -561,8 +554,12 @@ class Prediction:
         del_index = []
         for i in range(len(x_train_list)):
             train = x_train_list[i]
-            if train in x_test_list:
+            patch_name_without_tool = train_patch_names[i].split('_')[0]
+            project, id = patch_name_without_tool.split('-')[2], patch_name_without_tool.split('-')[3]
+            train_project_id = project + '-' + id
+            if train in x_test_list or train_project_id in test_project_ids:
                 del_index.append(i)
+
         x_train = np.delete(self.dataset, del_index, axis=0)
         y_train = np.delete(y_train, del_index, axis=0)
 
@@ -589,7 +586,7 @@ class Prediction:
             clf = RandomForestClassifier(n_estimators=100, ).fit(X=x_train, y=y_train)
         elif self.algorithm == 'xgb':
             dtrain = xgb.DMatrix(x_train, label=y_train)
-            clf = xgb.train(params=xgb_params, dtrain=dtrain, num_boost_round=100)
+            clf = xgb.train(params=xgb_params, dtrain=dtrain, num_boost_round=1000)
 
         # prediction
         if self.algorithm == 'lgb':
@@ -608,7 +605,7 @@ class Prediction:
             print('i:{}'.format(i / 10), end=' ')
             print('TP: %d -- TN: %d -- FP: %d -- FN: %d' % (tp, tn, fp, fn))
 
-        auc_, recall_p, recall_n, acc, prc, rc, f1 = self.evaluation_metrics(y_true=y_test, y_pred_prob=y_pred)
+        auc_, recall_p, recall_n, acc, prc, rc, f1 = self.evaluation_metrics(y_true=list(y_test), y_pred_prob=list(y_pred))
         # print('Accuracy: %f -- Precision: %f -- Recall: %f -- F1: %f -- AUC: %f' % (
         #     np.array(acc).mean(), np.array(prc).mean(), np.array(rc).mean(), np.array(f1).mean(),
         #     np.array(auc_).mean()))
@@ -626,160 +623,353 @@ class Prediction:
         roc_auc = metrics.auc(fpr, tpr)
 
         return output2
-    def run_cvgroup(self, i):
+    def run_cvfold(self, ):
 
         # scaler = StandardScaler()
         # scaler.fit_transform(self.dataset)
 
-        # skf = StratifiedKFold(n_splits=self.kfold, shuffle=True)
+        skf = StratifiedKFold(n_splits=self.kfold, shuffle=True)
         accs, prcs, rcs, f1s, aucs = list(), list(), list(), list(), list()
         rcs_p, rcs_n = list(), list()
         learned_correctness_all, engineered_correctness_all, combine_correctness_all, learned_incorrectness_all, engineered_incorrectness_all, combine_incorrectness_all = list(), list(), list(), list(), list(), list()
 
-        clf = None
-        xgb_params = {'objective': 'binary:logistic', 'verbosity': 0,}
-        # xgb_params = {'objective': 'binary:logistic', 'verbosity': 0, 'eta': 0.6, 'gamma':0.3}
-        if self.algorithm == 'lr':
-            clf_l = LogisticRegression(solver='lbfgs', max_iter=100).fit(X=self.train_features_learned, y=self.train_labels)
-            clf_e = LogisticRegression(solver='lbfgs', max_iter=100).fit(X=self.train_features_engineered, y=self.train_labels)
-        elif self.algorithm == 'dt':
-            clf_l = DecisionTreeClassifier().fit(X=self.train_features_learned, y=self.train_labels,)
-            clf_e = DecisionTreeClassifier().fit(X=self.train_features_engineered, y=self.train_labels,)
-        elif self.algorithm == 'rf':
-            # clf_l = RandomForestClassifier(n_estimators=100, ).fit(X=self.train_features_learned, y=self.train_labels)
-            clf_l = RandomForestClassifier(n_estimators=100, ).fit(X=self.train_features_learned, y=self.train_labels)
-            clf_e = RandomForestClassifier(n_estimators=100, ).fit(X=self.train_features_engineered, y=self.train_labels)
-        elif self.algorithm == 'xgb':
-            dtrain_learned = xgb.DMatrix(self.train_features_learned, label=self.train_labels)
-            dtrain_engineered = xgb.DMatrix(self.train_features_engineered, label=self.train_labels)
-            clf_l = xgb.train(params=xgb_params, dtrain=dtrain_learned, num_boost_round=100)
-            clf_e = xgb.train(params=xgb_params, dtrain=dtrain_engineered, num_boost_round=100)
-        elif self.algorithm == 'nb':
-            clf_l = GaussianNB().fit(X=self.train_features_learned, y=self.train_labels)
-            clf_e = GaussianNB().fit(X=self.train_features_engineered, y=self.train_labels)
-        elif self.algorithm == 'dnn':
-            clf_l = get_dnn(dimension=self.train_features_learned.shape[1])
-            # clf_l = get_dnn_4engineered(dimension=self.train_features_learned.shape[1])
-            clf_e = get_dnn_4engineered(dimension=self.train_features_engineered.shape[1])
-            callback = [keras.callbacks.EarlyStopping(monitor='auc', patience=1, mode="max", verbose=1),]
-            clf_l.fit(self.train_features_learned, self.train_labels, callbacks=callback, batch_size=32, epochs=10, )
-            clf_e.fit(self.train_features_engineered, self.train_labels, callbacks=callback, batch_size=32, epochs=10, )
-        elif self.algorithm == 'naive_rf':
-            clf_l = RandomForestClassifier(n_estimators=100, ).fit(X=self.train_features_learned, y=self.train_labels)
-            clf_e = RandomForestClassifier(n_estimators=100, ).fit(X=self.train_features_engineered, y=self.train_labels)
-            clf_c = RandomForestClassifier(n_estimators=100, ).fit(X=self.train_features_combine, y=self.train_labels)
-        elif self.algorithm == 'naive_xgb':
-            dtrain_learned = xgb.DMatrix(self.train_features_learned, label=self.train_labels)
-            dtrain_engineered = xgb.DMatrix(self.train_features_engineered, label=self.train_labels)
-            dtrain_combine = xgb.DMatrix(self.train_features_combine, label=self.train_labels)
+        for train_index, test_index in skf.split(self.dataset, self.labels):
+            x_train, y_train = self.dataset[train_index], self.labels[train_index]
+            x_test, y_test = self.dataset[test_index], self.labels[test_index]
+            patch_name_test = np.array(self.record.loc[test_index]['name'])
 
-            clf_l = xgb.train(params=xgb_params, dtrain=dtrain_learned, num_boost_round=100)
-            clf_e = xgb.train(params=xgb_params, dtrain=dtrain_engineered, num_boost_round=100)
-            clf_c = xgb.train(params=xgb_params, dtrain=dtrain_combine, num_boost_round=100)
-        # elif self.algorithm == 'dnn_dnn':
-        #     x_train_learned = x_train[:,:self.feature1_length]
-        #     x_train_static = x_train[:,self.feature1_length:]
-        #     callback = [keras.callbacks.EarlyStopping(monitor='auc', patience=1, mode="max", verbose=1), ]
-        #
-        #     combine_deep_model = get_dnn_dnn(x_train_learned.shape[1], x_train_static.shape[1])
-        #     combine_deep_model.fit([x_train_learned, x_train_static], y_train, callbacks=callback, batch_size=32,
-        #               epochs=10, )
-        elif self.algorithm == 'deep_combine':
-            clf_l = get_dnn(dimension=self.train_features_learned.shape[1])
-            clf_e = get_dnn_4engineered(dimension=self.train_features_engineered.shape[1])
-            callback = [keras.callbacks.EarlyStopping(monitor='auc', patience=1, mode="max", verbose=1),]
-            clf_l.fit(self.train_features_learned, self.train_labels, callbacks=callback, batch_size=32, epochs=10, )
-            clf_e.fit(self.train_features_engineered, self.train_labels, callbacks=callback, batch_size=32, epochs=10, )
+            # standard data
+            scaler = StandardScaler().fit(x_train)
+            # scaler = MinMaxScaler().fit(x_train)
+            x_train = scaler.transform(x_train)
+            x_test = scaler.transform(x_test)
 
-            clf_c = get_dnn_dnn(self.train_features_learned.shape[1], self.train_features_engineered.shape[1])
-            clf_c.fit([self.train_features_learned, self.train_features_engineered], self.train_labels, callbacks=callback, batch_size=32,
-                      epochs=10, )
+            xgb_params = {'objective': 'binary:logistic', 'verbosity': 0}
 
-        elif self.algorithm == 'ensemble_rf':
-            clf_l = RandomForestClassifier(n_estimators=100, ).fit(X=self.train_features_learned, y=self.train_labels)
-            clf_e = RandomForestClassifier(n_estimators=100, ).fit(X=self.train_features_engineered, y=self.train_labels)
-        elif self.algorithm == 'ensemble_xgb':
-            dtrain_learned = xgb.DMatrix(self.train_features_learned, label=self.train_labels)
-            dtrain_engineered = xgb.DMatrix(self.train_features_engineered, label=self.train_labels)
-            clf_l = xgb.train(params=xgb_params, dtrain=dtrain_learned, num_boost_round=100)
-            clf_e = xgb.train(params=xgb_params, dtrain=dtrain_engineered, num_boost_round=100)
+            clf = None
+            if self.algorithm == 'lr':
+                clf = LogisticRegression(solver='lbfgs', max_iter=1000).fit(X=x_train, y=y_train)
+            elif self.algorithm == 'lr_combine':
+                x_train_lr = x_train[:,:self.feature1_length]
+                lr = LogisticRegression(solver='lbfgs', max_iter=1000).fit(X=x_train_lr, y=y_train)
 
-        # prediction
-        if self.algorithm == 'xgb':
-            dtrain_learned = xgb.DMatrix(self.test_features_learned, label=self.test_labels)
-            dtrain_engineered = xgb.DMatrix(self.test_features_engineered, label=self.test_labels)
-            y_pred_l = clf_l.predict(dtrain_learned)
-            y_pred_e = clf_e.predict(dtrain_engineered)
-        elif self.algorithm == 'dnn':
-            y_pred_l = clf_l.predict(self.test_features_learned)[:, 0]
-            y_pred_e = clf_e.predict(self.test_features_engineered)[:, 0]
-        elif self.algorithm == 'ensemble_rf':
-            y_pred_l = clf_l.predict_proba(self.test_features_learned)[:, 1]
-            y_pred_e = clf_e.predict_proba(self.test_features_engineered)[:, 1]
-            y_pred_c = y_pred_l * 0.5 + y_pred_e * 0.5
-            learned_correctness, engineered_correctness, combine_correctness, learned_incorrectness, engineered_incorrectness, combine_incorrectness = self.predict_result(y_pred_lr_single=y_pred_l, y_pred_xgb_single=y_pred_e ,y_pred_combine=y_pred_c, y_test=self.test_labels, patch_name_test=self.test_infos)
+                x_train_xgb2 = x_train[:,self.feature1_length:]
+                x_train_xgb2_dmatrix = xgb.DMatrix(x_train_xgb2, label=y_train)
+                xgb2 = xgb.train(params=xgb_params, dtrain=x_train_xgb2_dmatrix, num_boost_round=100)
 
-        elif self.algorithm == 'ensemble_xgb':
-            dtrain_learned = xgb.DMatrix(self.test_features_learned, label=self.test_labels)
-            dtrain_engineered = xgb.DMatrix(self.test_features_engineered, label=self.test_labels)
+                lr_all = LogisticRegression(solver='lbfgs', max_iter=1000).fit(X=x_train, y=y_train)
+            elif self.algorithm == 'dt':
+                clf = DecisionTreeClassifier().fit(X=x_train, y=y_train, sample_weight=None)
+            elif self.algorithm == 'rf':
+                clf = RandomForestClassifier(n_estimators=100, ).fit(X=x_train, y=y_train)
+            elif self.algorithm == 'xgb':
+                dtrain = xgb.DMatrix(x_train, label=y_train)
+                clf = xgb.train(params=xgb_params, dtrain=dtrain, num_boost_round=100)
+            elif self.algorithm == 'xgb_combine':
+                x_train_xgb_all_dmatrix = xgb.DMatrix(x_train, label=y_train)
 
-            y_pred_l = clf_l.predict(dtrain_learned)
-            y_pred_e = clf_e.predict(dtrain_engineered)
-            # assign weight
-            y_pred_c = y_pred_l * 0.5 + y_pred_e * 0.5
-            learned_correctness, engineered_correctness, combine_correctness, learned_incorrectness, engineered_incorrectness, combine_incorrectness = self.predict_result(y_pred_lr_single=y_pred_l, y_pred_xgb_single=y_pred_e ,y_pred_combine=y_pred_c, y_test=self.test_labels, patch_name_test=self.test_infos)
-        elif self.algorithm == 'naive_xgb':
-            dtrain_learned = xgb.DMatrix(self.test_features_learned, label=self.test_labels)
-            dtrain_engineered = xgb.DMatrix(self.test_features_engineered, label=self.test_labels)
-            dtrain_combine = xgb.DMatrix(self.test_features_combine, label=self.test_labels)
+                x_train_xgb1 = x_train[:,:self.feature1_length]
+                x_train_xgb1_dmatrix = xgb.DMatrix(x_train_xgb1, label=y_train)
 
-            y_pred_l = clf_l.predict(dtrain_learned)
-            y_pred_e = clf_e.predict(dtrain_engineered)
-            y_pred_c = clf_c.predict(dtrain_combine)
+                x_train_xgb2 = x_train[:,self.feature1_length:]
+                x_train_xgb2_dmatrix = xgb.DMatrix(x_train_xgb2, label=y_train)
 
-            learned_correctness, engineered_correctness, combine_correctness, learned_incorrectness, engineered_incorrectness, combine_incorrectness = self.predict_result(y_pred_lr_single=y_pred_l, y_pred_xgb_single=y_pred_e ,y_pred_combine=y_pred_c, y_test=self.test_labels, patch_name_test=self.test_infos)
+                xgb1 = xgb.train(params=xgb_params, dtrain=x_train_xgb1_dmatrix, num_boost_round=100)
+                xgb2 = xgb.train(params=xgb_params, dtrain=x_train_xgb2_dmatrix, num_boost_round=100)
+                xgb_all = xgb.train(params=xgb_params, dtrain=x_train_xgb_all_dmatrix, num_boost_round=100)
+            elif self.algorithm == 'rf_combine':
+                x_train_rf1 = x_train[:,:self.feature1_length]
+                x_train_rf2 = x_train[:,self.feature1_length:]
 
-            # y_pred = y_pred_xgb_all
-        elif self.algorithm == 'naive_rf':
-            y_pred_l = clf_l.predict_proba(self.test_features_learned)[:, 1]
-            y_pred_e = clf_e.predict_proba(self.test_features_engineered)[:, 1]
-            y_pred_c = clf_c.predict_proba(self.test_features_combine)[:, 1]
-            learned_correctness, engineered_correctness, combine_correctness, learned_incorrectness, engineered_incorrectness, combine_incorrectness = self.predict_result(y_pred_lr_single=y_pred_l, y_pred_xgb_single=y_pred_e ,y_pred_combine=y_pred_c, y_test=self.test_labels, patch_name_test=self.test_infos)
-            # y_pred = y_pred_rf_all
-        elif self.algorithm == 'deep_combine':
-            y_pred_l = clf_l.predict(self.test_features_learned)[:, 0]
-            y_pred_e = clf_e.predict(self.test_features_engineered)[:, 0]
-            y_pred_c = clf_c.predict([self.test_features_learned, self.test_features_engineered])[:, 0]
-            learned_correctness, engineered_correctness, combine_correctness, learned_incorrectness, engineered_incorrectness, combine_incorrectness = self.predict_result(y_pred_lr_single=y_pred_l, y_pred_xgb_single=y_pred_e ,y_pred_combine=y_pred_c, y_test=self.test_labels, patch_name_test=self.test_infos)
-        else:
-            y_pred_l = clf_l.predict_proba(self.test_features_learned)[:, 1]
-            y_pred_e = clf_e.predict_proba(self.test_features_engineered)[:, 1]
+                rf1 = RandomForestClassifier(n_estimators=100, ).fit(X=x_train_rf1, y=y_train)
+                rf2 = RandomForestClassifier(n_estimators=100, ).fit(X=x_train_rf2, y=y_train)
+                rf_all = RandomForestClassifier(n_estimators=100, ).fit(X=x_train, y=y_train)
+            elif self.algorithm == 'lgb':
+                x_train_lgb_dmatrix = lgb.Dataset(data=x_train, label=y_train)
+                params = {'objective': 'binary', }
+                num_boost_round = 100
+                clf = lgb.train(params=params, train_set=x_train_lgb_dmatrix, num_boost_round=num_boost_round,)
+            elif self.algorithm == 'nb':
+                clf = GaussianNB().fit(X=x_train, y=y_train)
+            elif self.algorithm == 'dnn':
+                if x_train.shape[1] == 1024 or x_train.shape[1] == 2050:
+                    dnn_model = get_dnn(dimension=x_train.shape[1])
+                elif x_train.shape[1] == 195 or x_train.shape[1] == 4510:
+                    dnn_model = get_dnn_4engineered(dimension=x_train.shape[1])
+                # bert, CC2Vec, Doc2Vec
+                else:
+                    dnn_model = get_dnn(dimension=x_train.shape[1])
 
-        # auc curve
-        # self.draw_auc(y_pred, y_test)
+                callback = [keras.callbacks.EarlyStopping(monitor='auc', patience=1, mode="max", verbose=1),]
+                dnn_model.fit(x_train, y_train, callbacks=callback, batch_size=32, epochs=10, )
+            elif self.algorithm == 'dnn_dnn':
+                x_train_learned = x_train[:,:self.feature1_length]
+                x_train_static = x_train[:,self.feature1_length:]
+                callback = [keras.callbacks.EarlyStopping(monitor='auc', patience=1, mode="max", verbose=1), ]
 
-        # confusion matrix
-        # self.confusion_matrix(y_pred, y_test)
+                combine_deep_model = get_dnn_dnn(x_train_learned.shape[1], x_train_static.shape[1])
+                combine_deep_model.fit([x_train_learned, x_train_static], y_train, callbacks=callback, batch_size=32,
+                          epochs=10, )
+            elif self.algorithm == 'dnn_dnn_venn':
+                x_train_lr = x_train[:,:self.feature1_length]
+                x_train_xgb = x_train[:,self.feature1_length:]
+                callback = [keras.callbacks.EarlyStopping(monitor='auc', patience=1, mode="max", verbose=1), ]
 
-        # # calculate SHAP value
-        # if self.fea_used == 'combine' and self.algorithm == 'naive_xgb':
-        #     # if i == 5:
-        #         self.shap_value(clf_l, self.test_features_learned, clf_e, self.test_features_engineered, clf_c, self.test_features_combine, learned_correctness,
-        #                     engineered_correctness, combine_correctness, self.test_infos)
 
-        # sum up first here
-        self.y_true_one = list(self.test_labels)
-        self.y_pred_l_one = list(y_pred_l)
-        self.y_pred_e_one = list(y_pred_e)
-        if self.fea_used == 'combine':
-            self.y_pred_c_one = list(y_pred_c)
+                dnn_model1 = get_dnn(dimension=x_train_lr.shape[1])
+                dnn_model1.fit(x_train_lr, y_train, callbacks=callback, batch_size=32, epochs=10, )
 
-        if self.fea_used == 'combine':
-            # auc_c, recall_p_c, recall_n_c, acc_c, prc_c, rc_c, f1_c = self.evaluation_metrics(y_true=list(self.test_labels), y_pred_prob=list(y_pred_c))
-            # self.result_combine = [auc_c, recall_p_c, recall_n_c, acc_c, prc_c, rc_c, f1_c]
-            self.result_venn = [learned_correctness, engineered_correctness, combine_correctness, learned_incorrectness, engineered_incorrectness, combine_incorrectness]
+                dnn_model2 = get_dnn_4engineered(dimension=x_train_xgb.shape[1])
+                dnn_model2.fit(x_train_xgb, y_train, callbacks=callback, batch_size=32, epochs=10, )
+
+                combine_deep_model = get_dnn_dnn(x_train_lr.shape[1], x_train_xgb.shape[1])
+                combine_deep_model.fit([x_train_lr, x_train_xgb], y_train, callbacks=callback, batch_size=32,
+                          epochs=10, )
+
+            elif self.algorithm == 'xgb_xgb':
+                x_train_xgb1 = x_train[:,:self.feature1_length]
+                x_train_xgb1_dmatrix = xgb.DMatrix(x_train_xgb1, label=y_train)
+
+                x_train_xgb2 = x_train[:,self.feature1_length:]
+                x_train_xgb2_dmatrix = xgb.DMatrix(x_train_xgb2, label=y_train)
+
+                xgb1 = xgb.train(params=xgb_params, dtrain=x_train_xgb1_dmatrix, num_boost_round=100)
+                xgb2 = xgb.train(params=xgb_params, dtrain=x_train_xgb2_dmatrix, num_boost_round=100)
+            elif self.algorithm == 'rf_rf':
+                x_train_rf1 = x_train[:,:self.feature1_length]
+                x_train_rf2 = x_train[:,self.feature1_length:]
+
+                rf1 = RandomForestClassifier(n_estimators=100, ).fit(X=x_train_rf1, y=y_train)
+                rf2 = RandomForestClassifier(n_estimators=100, ).fit(X=x_train_rf2, y=y_train)
+
+            elif self.algorithm == 'lr_rf':
+                x_train_lr = x_train[:,:self.feature1_length]
+                x_train_rf = x_train[:,self.feature1_length:]
+
+                lr = LogisticRegression(solver='lbfgs', max_iter=1000).fit(X=x_train_lr, y=y_train)
+                rf = RandomForestClassifier().fit(X=x_train_rf, y=y_train)
+            elif self.algorithm == 'wide_deep':
+                x_train_lr = x_train[:,:self.feature1_length]
+                x_train_xgb = x_train[:,self.feature1_length:]
+                combine_deep_model = get_wide_deep(x_train_lr.shape[1], x_train_xgb.shape[1])
+                callback = [keras.callbacks.EarlyStopping(monitor='auc', patience=1, mode="max", verbose=1), ]
+                combine_deep_model.fit([x_train_lr, x_train_xgb], y_train, callbacks=callback, batch_size=32,
+                          epochs=10, )
+            elif self.algorithm == 'lr_xgb':
+                x_train_lr = x_train[:,:self.feature1_length]
+                x_train_xgb = x_train[:,self.feature1_length:]
+
+                lr = LogisticRegression(solver='lbfgs', max_iter=1000).fit(X=x_train_lr, y=y_train)
+
+                x_train_xgb_dmatrix = xgb.DMatrix(x_train_xgb, label=y_train)
+                xgb_model = xgb.train(params=xgb_params, dtrain=x_train_xgb_dmatrix, num_boost_round=100)
+
+
+            elif self.algorithm == 'lr_lgb':
+                x_train_lr = x_train[:, :self.feature1_length]
+                x_train_lgb = x_train[:, self.feature1_length:]
+
+                lr = LogisticRegression(solver='lbfgs', max_iter=1000).fit(X=x_train_lr, y=y_train)
+
+                x_train_lgb_dmatrix = lgb.Dataset(data=x_train_lgb, label=y_train)
+
+                params = {'objective': 'binary', 'verbosity': 0}
+                num_boost_round = 100
+                lgb_model = lgb.train(params=params, train_set=x_train_lgb_dmatrix, num_boost_round=num_boost_round,)
+
+            elif self.algorithm == 'lstm':
+                # reshape input to be [samples, time steps, features]
+                x_train = np.reshape(x_train, (x_train.shape[0], 1, x_train.shape[1]))
+                x_test = np.reshape(x_test, (x_test.shape[0], 1, x_test.shape[1]))
+
+                # create and fit the LSTM network
+                clf = Sequential()
+                clf.add(LSTM(128, input_shape=(x_train.shape[1:]), return_sequences=True))
+                clf.add(Dropout(0.4))
+                clf.add(LSTM(128))
+                clf.add(Dense(64, activation='relu'))
+                clf.add(Dropout(0.2))
+                clf.add(Dense(2, activation='softmax'))
+                clf.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+                clf.fit(x_train, y_train, epochs=50, batch_size=1000, verbose=2)
+
+            # prediction
+            if self.algorithm == 'lgb':
+                x_test_lgb = x_test
+                y_pred = clf.predict(x_test_lgb)
+            elif self.algorithm == 'xgb':
+                x_test_xgb = x_test
+                x_test_xgb_dmatrix = xgb.DMatrix(x_test_xgb, label=y_test)
+                y_pred = clf.predict(x_test_xgb_dmatrix)
+            elif self.algorithm == 'dnn':
+                y_pred = dnn_model.predict(x_test)[:, 0]
+            elif self.algorithm == 'rf_rf':
+                x_test_rf1 = x_test[:,:self.feature1_length]
+                x_test_rf2 = x_test[:,self.feature1_length:]
+
+                y_pred_rf1 = rf1.predict_proba(x_test_rf1)[:, 1]
+                y_pred_rf2 = rf2.predict_proba(x_test_rf2)[:, 1]
+
+                y_pred = y_pred_rf1 * 0.5 + y_pred_rf2 * 0.5
+            elif self.algorithm == 'xgb_xgb':
+                x_test_xgb1 = x_test[:,:self.feature1_length]
+                x_test_xgb1_dmatrix = xgb.DMatrix(x_test_xgb1, label=y_test)
+
+                x_test_xgb2 = x_test[:,self.feature1_length:]
+                x_test_xgb2_dmatrix = xgb.DMatrix(x_test_xgb2, label=y_test)
+
+                y_pred_xgb1 = xgb1.predict(x_test_xgb1_dmatrix)
+                y_pred_xgb2 = xgb2.predict(x_test_xgb2_dmatrix)
+
+                # assign weight
+                y_pred = y_pred_xgb1 * 0.5 + y_pred_xgb2 * 0.5
+
+                learned_correctness, engineered_correctness, combine_correctness, learned_incorrectness, engineered_incorrectness, combine_incorrectness = self.predict_result(y_pred_lr_single=y_pred_xgb1, y_pred_xgb_single=y_pred_xgb2 ,y_pred_combine=y_pred, y_test=y_test, patch_name_test=patch_name_test)
+
+            elif self.algorithm == 'lr_combine':
+                x_test_lr = x_test[:, :self.feature1_length]
+
+                x_test_xgb2 = x_test[:, self.feature1_length:]
+                x_test_xgb2_dmatrix = xgb.DMatrix(x_test_xgb2, label=y_test)
+
+                y_pred_lr = lr.predict_proba(x_test_lr)[:, 1]
+                y_pred_xgb = xgb2.predict(x_test_xgb2_dmatrix)
+
+                y_pred_xgb_all = lr_all.predict_proba(x_test)[:, 1]
+
+                learned_correctness, engineered_correctness, combine_correctness, learned_incorrectness, engineered_incorrectness, combine_incorrectness = self.predict_result(y_pred_lr_single=y_pred_lr, y_pred_xgb_single=y_pred_xgb ,y_pred_combine=y_pred_xgb_all, y_test=y_test, patch_name_test=patch_name_test)
+
+                y_pred = y_pred_xgb_all
+            elif self.algorithm == 'xgb_combine':
+                x_test_xgb_all_dmatrix = xgb.DMatrix(x_test, label=y_test)
+
+                x_test_xgb1 = x_test[:, :self.feature1_length]
+                x_test_xgb1_dmatrix = xgb.DMatrix(x_test_xgb1, label=y_test)
+
+                x_test_xgb2 = x_test[:, self.feature1_length:]
+                x_test_xgb2_dmatrix = xgb.DMatrix(x_test_xgb2, label=y_test)
+
+                y_pred_xgb1 = xgb1.predict(x_test_xgb1_dmatrix)
+                y_pred_xgb2 = xgb2.predict(x_test_xgb2_dmatrix)
+                y_pred_xgb_all = xgb_all.predict(x_test_xgb_all_dmatrix)
+
+                learned_correctness, engineered_correctness, combine_correctness, learned_incorrectness, engineered_incorrectness, combine_incorrectness = self.predict_result(y_pred_lr_single=y_pred_xgb1, y_pred_xgb_single=y_pred_xgb2 ,y_pred_combine=y_pred_xgb_all, y_test=y_test, patch_name_test=patch_name_test)
+
+                y_pred = y_pred_xgb_all
+            elif self.algorithm == 'rf_combine':
+                x_test_rf1 = x_test[:, :self.feature1_length]
+                x_test_rf2 = x_test[:, self.feature1_length:]
+
+                y_pred_rf1 = rf1.predict(x_test_rf1)
+                y_pred_rf2 = rf2.predict(x_test_rf2)
+                y_pred_rf_all = rf_all.predict(x_test)
+
+                learned_correctness, engineered_correctness, combine_correctness, learned_incorrectness, engineered_incorrectness, combine_incorrectness = self.predict_result(y_pred_lr_single=y_pred_rf1, y_pred_xgb_single=y_pred_rf2 ,y_pred_combine=y_pred_rf_all, y_test=y_test, patch_name_test=patch_name_test)
+
+                y_pred = y_pred_rf_all
+            elif self.algorithm == 'wide_deep' or self.algorithm == 'dnn_dnn' or self.algorithm == 'dnn_cnn':
+                x_test_lr = x_test[:,:self.feature1_length]
+                x_test_xgb = x_test[:,self.feature1_length:]
+                y_pred = combine_deep_model.predict([x_test_lr, x_test_xgb])[:, 0]
+
+            elif self.algorithm == 'dnn_dnn_venn':
+                x_test_lr = x_test[:,:self.feature1_length]
+                x_test_xgb = x_test[:,self.feature1_length:]
+
+                y_pred_lr = dnn_model1.predict(x_test_lr)[:, 0]
+                y_pred_xgb = dnn_model2.predict(x_test_xgb)[:, 0]
+                y_pred = combine_deep_model.predict([x_test_lr, x_test_xgb])[:, 0]
+
+                learned_correctness, engineered_correctness, combine_correctness, learned_incorrectness, engineered_incorrectness, combine_incorrectness = self.predict_result(y_pred_lr_single=y_pred_lr, y_pred_xgb_single=y_pred_xgb ,y_pred_combine=y_pred, y_test=y_test, patch_name_test=patch_name_test)
+
+            elif self.algorithm == 'lr_xgb':
+                x_test_lr = x_test[:,:self.feature1_length]
+                x_test_xgb = x_test[:,self.feature1_length:]
+                x_test_xgb_dmatrix = xgb.DMatrix(x_test_xgb, label=y_test)
+
+                y_pred_lr = lr.predict_proba(x_test_lr)[:, 1]
+                y_pred_xgb = xgb_model.predict(x_test_xgb_dmatrix)
+
+                # assign weight
+                y_pred = y_pred_lr * 0.5 + y_pred_xgb * 0.5
+
+                # venn diagram
+                # diff_correct, diff_incorrect, p = self.venn_2(y_pred_lr_single=y_pred_lr, y_pred_combine=y_pred, y_test=y_test, patch_name_test=patch_name_test)
+
+                # venn 3
+                # self.venn_3(y_pred_lr_single=y_pred_lr, y_pred_xgb_single=y_pred_xgb, y_pred_combine=y_pred, y_test=y_test, patch_name_test=patch_name_test)
+
+                learned_correctness, engineered_correctness, combine_correctness, learned_incorrectness, engineered_incorrectness, combine_incorrectness = self.predict_result(y_pred_lr_single=y_pred_lr, y_pred_xgb_single=y_pred_xgb ,y_pred_combine=y_pred, y_test=y_test, patch_name_test=patch_name_test)
+
+            else:
+                y_pred = clf.predict_proba(x_test)[:, 1]
+
+            # auc curve
+            # self.draw_auc(y_pred, y_test)
+
+            # confusion matrix
+            # self.confusion_matrix(y_pred, y_test)
+
+            # main metrics
+            auc_, recall_p, recall_n, acc, prc, rc, f1 = self.evaluation_metrics(y_true=list(y_test), y_pred_prob=list(y_pred))
+
+            accs.append(acc)
+            prcs.append(prc)
+            rcs.append(rc)
+            f1s.append(f1)
+
+            aucs.append(auc_)
+            rcs_p.append(recall_p)
+            rcs_n.append(recall_n)
+
+            if self.algorithm == 'lr_xgb' or self.algorithm == 'xgb_xgb' or self.algorithm == 'dnn_dnn_venn' or self.algorithm == 'xgb_combine'  or self.algorithm == 'lr_combine':
+                learned_correctness_all += learned_correctness
+                engineered_correctness_all += engineered_correctness
+                combine_correctness_all += combine_correctness
+
+                learned_incorrectness_all += learned_incorrectness
+                engineered_incorrectness_all += engineered_incorrectness
+                combine_incorrectness_all += combine_incorrectness
+
+            # calculate SHAP value
+            # if self.algorithm == 'xgb_combine':
+            #     self.shap_value(xgb1, x_test_xgb1, xgb2, x_test_xgb2, xgb_all, x_test, learned_correctness,
+            #                     engineered_correctness, combine_correctness, patch_name_test)
+
+            # elif self.algorithm == 'rf_combine':
+            #     self.shap_value(rf1, x_test_rf1, rf2, x_test_rf2, rf_all, x_test, learned_correctness,
+            #                     engineered_correctness, combine_correctness, patch_name_test)
+
+        print('')
+        print('{}-fold cross validation mean: '.format(self.kfold))
+        print('Accuracy: {:.1f} -- Precision: {:.1f} -- +Recall: {:.1f} -- F1: {:.1f} -- AUC: {:.3f}'.format(np.array(accs).mean()*100, np.array(prcs).mean()*100, np.array(rcs).mean()*100, np.array(f1s).mean()*100, np.array(aucs).mean()))
+        print('AUC: {:.3f}, +Recall: {:.3f}, -Recall: {:.3f}'.format(np.array(aucs).mean(), np.array(rcs_p).mean(), np.array(rcs_n).mean()))
+
+        output2 = '------------------------------------\n'
+        output2 += '{}-fold cross validation\n'.format(self.kfold)
+        output2 += 'AUC: {:.3f}, +Recall: {:.3f}, -Recall: {:.3f}\n\n'.format(np.array(aucs).mean(), np.array(rcs_p).mean(), np.array(rcs_n).mean())
+
+        if self.algorithm == 'xgb_xgb' or self.algorithm == 'lr_xgb' or self.algorithm == 'dnn_dnn_venn' or self.algorithm == 'xgb_combine' or self.algorithm == 'lr_combine':
+            self.draw_venn2(learned_correctness_all, combine_correctness_all, learned_incorrectness_all, combine_incorrectness_all)
+            self.draw_venn3(learned_correctness_all, engineered_correctness_all, combine_correctness_all, learned_incorrectness_all, engineered_incorrectness_all, combine_incorrectness_all)
+
+            # # correct included
+            independent_learned, independent_engineered, independent_combine = self.independent_case(learned_correctness_all, engineered_correctness_all, combine_correctness_all)
+            # print('Correct Included: ')
+            # print('independent_learned: {}'.format(independent_learned))
+            # print('independent_engineered: {}'.format(independent_engineered))
+            # print('independent_combine: {}'.format(independent_combine))
+            # # incorrect excluded
+            # independent_learned, independent_engineered, independent_combine = self.independent_case(learned_incorrectness_all, engineered_incorrectness_all, combine_incorrectness_all)
+            # print('Correct Included: ')
+            # print('independent_learned: {}'.format(independent_learned))
+            # print('independent_engineered: {}'.format(independent_engineered))
+            # print('independent_combine: {}'.format(independent_combine))
+
+        return output2
 
     def run_slice(self, ):
+
         scaler = StandardScaler()
         scaler.fit_transform(self.dataset)
 
