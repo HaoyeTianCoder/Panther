@@ -1,4 +1,6 @@
 import numpy as np
+import sys
+sys.path.append("..")
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
