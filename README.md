@@ -13,7 +13,7 @@ Leopard and Panther
 =======
 A patch correctness predicting framework.
 
-## Ⅱ) Requirements
+## Ⅰ) Requirements
 ### A) Environment 
   * python 3.7 (Anaconda recommended)
   * pip install -r requirements.txt
@@ -25,7 +25,7 @@ A patch correctness predicting framework.
   2. self.path_dataset ---> PatchCollectingTOSEMYeUnique. The main labeled patches dataset.
   3. self.path_testdata ---> PatchSimTOSEM. The patches used by Patchsim. 
 
-## Ⅲ) Experiment
+## Ⅱ) Experiment
 To obtain the experimental results of our paper, go to folder **experiment** and execute `run.py` with the following parameters:
 
 ### A) RQ-3: Classification of Correct Patches with Supervised Learning.
@@ -57,11 +57,13 @@ Comparing results of classifying correct patches with combined feature against t
 python main.py experiment cvgroup combine ensemble_xgb
 ```
 The last argument selected in {ensemble_rf, naive_rf, ensemble_xgb, naive_xgb, deep_combine}.
+
 ### C) RQ-5: Explanation of Improvements of Combination.
 SHAP analysis for features combination.
 ```
 python main.py experiment SHAP
 ```
+Then, execute **SHAP/display.ipynb** in Jupyter notebook.
 
 ### D) Other scripts
   1. Deduplicating your dataset in self.path_dataset with script.
