@@ -14,11 +14,12 @@ from statsmodels.stats.contingency_tables import mcnemar
 
 
 class Experiment:
-    def __init__(self, fea_used, w2v, path_data_pickle, path_testdata, split_method, algorithm, ):
+    def __init__(self, fea_used, w2v, path_data_pickle, path_testdata, split_method, algorithm, explanation=None):
         self.fea_used = fea_used
         self.w2v = w2v
         self.split_method = split_method
         self.algorithm = algorithm
+        self.explanation = explanation
         self.feature1_length = None
         self.result = ''
 
@@ -108,9 +109,9 @@ class Experiment:
 
 
             # init prediction
-            pd = predict_cv2.Prediction(train_features_learned, train_features_engineered, train_features_combine, train_labels, \
+            pd = predict_cv.Prediction(train_features_learned, train_features_engineered, train_features_combine, train_labels, \
                                         test_features_learned, test_features_engineered, test_features_combine, test_labels, test_infos, self.algorithm, split_method, fea_used)
-
+            pd.explanation = self.explanation
 
             pd.run_cvgroup(i)
 
@@ -136,7 +137,7 @@ class Experiment:
         # pd.draw_auc(y_pmetrics_learnedred, metrics_y_true)
 
         # confusion matrix
-        pd.confusion_matrix(metrics_learned, metrics_y_true)
+        # pd.confusion_matrix(metrics_learned, metrics_y_true)
 
         if split_method == 'cvgroup':
             print('Learned feature:')
@@ -333,38 +334,52 @@ class Experiment:
         with open(out_path,'a+') as file:
             file.write(self.result)
 
-
-parser = argparse.ArgumentParser(description='Test for argparse')
-parser.add_argument('--w2v', '-w', help='word2vector',)
-parser.add_argument('--version', '-v', help='dataset verison', default='V1U')
-parser.add_argument('--path', '-p', help='absolute path of dataset', )
-parser.add_argument('--task', '-t', help='task', )
-args = parser.parse_args()
+# parser = argparse.ArgumentParser(description='Test for argparse')
+# parser.add_argument('--w2v', '-w', help='word2vector',)
+# parser.add_argument('--version', '-v', help='dataset verison', default='V1U')
+# parser.add_argument('--path', '-p', help='absolute path of dataset', )
+# parser.add_argument('--task', '-t', help='task', )
+# args = parser.parse_args()
 
 if __name__ == '__main__':
     # config
     cfg = Config()
-
     path_dataset = cfg.path_dataset
     path_testdata = cfg.path_testdata
     version = cfg.version
     w2v = cfg.wcv
 
-    # w2v = 'CC2Vec'
-    # version = 'V1UCross'
+    if len(sys.argv) == 2:
+        script_name = sys.argv[0]
+        arg1 = sys.argv[1]
+        arg2 = ''
+        arg3 = ''
+        arg4 = ''
+    elif len(sys.argv) == 3:
+        script_name = sys.argv[0]
+        arg1 = sys.argv[1]
+        arg2 = sys.argv[2]
+        arg3 = ''
+        arg4 = ''
+    elif len(sys.argv) == 4:
+        script_name = sys.argv[0]
+        arg1 = sys.argv[1]
+        arg2 = sys.argv[2]
+        arg3 = sys.argv[3]
+        arg4 = ''
+    elif len(sys.argv) == 5:
+        script_name = sys.argv[0]
+        arg1 = sys.argv[1]
+        arg2 = sys.argv[2]
+        arg3 = sys.argv[3]
+        arg4 = sys.argv[4]
+    else:
+        arg1 = 'experiment'
+        arg2 = 'cvgroup'
+        arg3 = 'single'
+        arg4 = 'xgb'
 
-    # w2v = 'CC2Vec'
-    # version = 'V1U'
-
-    # w2v = 'Bert'
-    # version = 'V2U'
-
-    # w2v = 'CC2Vec'
-    # version = 'V2U'
-
-    task = 'experiment'
-    # task = args.task
-
+    task = arg1
     print('TASK: {}'.format(task))
     if task == 'deduplicate':
         # drop same patch
@@ -399,35 +414,41 @@ if __name__ == '__main__':
         # start experiment
         print('version: {}  w2c: {}'.format(version, w2v))
         path_data_pickle = '../data/' + w2v + '.pickle'
+        explanation = None
 
         # path_learned_feature = folder+'/learned_'+w2v+'.npy'
         # path_engineered_feature = folder+'/engineered_ods.npy'
         # path_labels = folder+'/labels.npy'
         # record = folder+'/record.txt'
 
-        split_method = 'cvgroup'
-        # split_method = 'compare4patchsim'
+        split_method = arg2
+        fea_used = arg3
+        algorithm = arg4
 
-        algorithm = ''
+        if split_method == 'compare4patchsim':
+            fea_used = 'single'
+            algorithm = 'xgb'
+        if split_method == 'SHAP':
+            split_method = 'cvgroup'
+            fea_used = 'combine'
+            algorithm = 'naive_xgb'
+            explanation = 'SHAP'
 
-        # fea_used = 'single'
-        fea_used = 'combine'
+        # if fea_used == 'single':
+        #     # algorithm = 'dt'
+        #     # algorithm = 'rf'
+        #     algorithm = 'xgb'
+        #     # algorithm = 'dnn'
+        # elif fea_used == 'combine':
+        #     algorithm = 'ensemble_rf'
+        #     # algorithm = 'naive_rf'
+        #
+        #     # algorithm = 'ensemble_xgb'
+        #     # algorithm = 'naive_xgb'
+        #
+        #     # algorithm = 'deep_combine'
 
-        if fea_used == 'single':
-            # algorithm = 'dt'
-            # algorithm = 'rf'
-            # algorithm = 'xgb'
-            algorithm = 'dnn'
-        elif fea_used == 'combine':
-            algorithm = 'ensemble_rf'
-            # algorithm = 'naive_rf'
-
-            # algorithm = 'ensemble_xgb'
-            # algorithm = 'naive_xgb'
-
-            # algorithm = 'deep_combine'
-
-        e = Experiment(fea_used, w2v, path_data_pickle, path_testdata, split_method, algorithm, )
+        e = Experiment(fea_used, w2v, path_data_pickle, path_testdata, split_method, algorithm, explanation)
         e.run()
 
         
