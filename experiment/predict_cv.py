@@ -54,6 +54,7 @@ class Prediction:
         self.algorithm = algorithm
         self.split_method = split_method
         self.fea_used = fea_used
+        self.explanation = None
 
         # patchsim data test
         self.patchsim_name = None
@@ -768,11 +769,12 @@ class Prediction:
         # confusion matrix
         # self.confusion_matrix(y_pred, y_test)
 
-        # # calculate SHAP value
-        # if self.fea_used == 'combine' and self.algorithm == 'naive_xgb':
-        #     # if i == 5:
-        #         self.shap_value(clf_l, self.test_features_learned, clf_e, self.test_features_engineered, clf_c, self.test_features_combine, learned_correctness,
-        #                     engineered_correctness, combine_correctness, self.test_infos)
+        # calculate SHAP value
+        if self.explanation == 'SHAP':
+            if self.fea_used == 'combine' and self.algorithm == 'naive_xgb':
+                if i == 5:
+                    self.shap_value(clf_l, self.test_features_learned, clf_e, self.test_features_engineered, clf_c, self.test_features_combine, learned_correctness,
+                                engineered_correctness, combine_correctness, self.test_infos)
 
         # sum up first here
         self.y_true_one = list(self.test_labels)
