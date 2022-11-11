@@ -14,7 +14,7 @@ from statsmodels.stats.contingency_tables import mcnemar
 
 
 class Experiment:
-    def __init__(self, fea_used, w2v, path_data_pickle, path_testdata, split_method, algorithm, explanation=None):
+    def __init__(self, fea_used, w2v, path_data_pickle, split_method, algorithm, explanation=None):
         self.fea_used = fea_used
         self.w2v = w2v
         self.split_method = split_method
@@ -25,7 +25,6 @@ class Experiment:
 
         self.path_learned_feature = ''
         self.path_engineered_feature = ''
-        self.path_testdata = path_testdata
         self.path_labels = ''
         self.path_record = ''
 
@@ -345,7 +344,7 @@ if __name__ == '__main__':
     # config
     cfg = Config()
     path_dataset = cfg.path_dataset
-    path_testdata = cfg.path_testdata
+    path_testdata = ''
     version = cfg.version
     w2v = cfg.wcv
 
@@ -408,6 +407,7 @@ if __name__ == '__main__':
     elif task == 'save_npy_4test':
         # for test data
         other = 'ods'
+        # version is 'Cross_bigdata' or 'TestData'
         save_feature.save_npy_test(path_dataset, path_testdata, w2v, other, version)
 
     elif task == 'experiment':
@@ -448,7 +448,7 @@ if __name__ == '__main__':
         #
         #     # algorithm = 'deep_combine'
 
-        e = Experiment(fea_used, w2v, path_data_pickle, path_testdata, split_method, algorithm, explanation)
+        e = Experiment(fea_used, w2v, path_data_pickle, split_method, algorithm, explanation)
         e.run()
 
         
