@@ -19,7 +19,7 @@ A patch correctness predicting framework.
   * pip install -r requirements.txt
   
 ### B) Dataset 
-  download _PatchCollectingTOSEMYeUnique.zip_ (need to be unzipped) from [data in Zenodo]( "Dataset for Panther"), 
+  download _PatchCollectingTOSEMYeUnique.zip_ (need to be unzipped) from [data in Zenodo](https://zenodo.org/record/7314629#.Y27XjGRKhhE "Dataset for Panther"), 
   accordingly change the absolute path of the associated files in **config_default.py** of this repository as below.
   1. self.path_dataset ---> PatchCollectingTOSEMYeUnique. The main labeled patches dataset.
   2. self.wcv in {Bert, CC2Vec, Doc}.
