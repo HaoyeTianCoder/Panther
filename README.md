@@ -19,12 +19,13 @@ A patch correctness predicting framework.
   * pip install -r requirements.txt
   
 ### B) Dataset 
-  download _PatchCollectingTOSEMYeUnique.zip_ (need to be unzipped), _defects4j_buggy.pickle_ and _PatchSimTOSEM_ from [data in Zenodo]( "Dataset for Panther"), 
+  download _PatchCollectingTOSEMYeUnique.zip_ (need to be unzipped) from [data in Zenodo]( "Dataset for Panther"), 
   accordingly change the absolute path of the associated files in **config_default.py** of this repository as below.
-  1. self.defects4j_buggy ---> defects4j_buggy.  Source buggy program of Defects4J.
-  2. self.path_dataset ---> PatchCollectingTOSEMYeUnique. The main labeled patches dataset.
-  3. self.path_testdata ---> PatchSimTOSEM. The patches used by Patchsim. 
+  1. self.path_dataset ---> PatchCollectingTOSEMYeUnique. The main labeled patches dataset.
+  2. self.wcv in {Bert, CC2Vec, Doc}.
 
+[//]: # (  3. self.defects4j_buggy ---> defects4j_buggy.  Source buggy program of Defects4J.)
+  
 ## Ⅱ) Experiment
 To obtain the experimental results of our paper, go to folder **experiment** and execute `run.py` with the following parameters:
 
@@ -65,7 +66,10 @@ python main.py experiment SHAP
 ```
 Then, execute **SHAP/display.ipynb** in Jupyter notebook.
 
-### D) Other scripts
+### D) Other RQs
+Please refer to [Leopard](https://github.com/TruX-DTF/DL4PatchCorrectness).
+
+### E) Other scripts
   1. Deduplicating your dataset in self.path_dataset with script.
 ```
 python main.py deduplicate
