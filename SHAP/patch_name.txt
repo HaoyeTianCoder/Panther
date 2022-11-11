@@ -1,3 +1,6 @@
-patch identified by learned: 1-patch2-Closure-73-SequenceR
-patch identified by engineered: 1-patch1-Math-58-Arja
-patch identified by combined: 1-patch1-Time-15-Arja
+patch identified by learned: patch1#1-Jsoup-59_Developer_1
+patch identified by engineered: patch1#2-Math-98_CoCoNut_1
+patch identified by combined: patch1#1-Closure-78_Developer_1
+patch identified by combined: patch1-Closure-115_KaliA_1
+patch identified by combined: patch1#1-Cli-11_Developer_1
+patch identified by combined: patch1-Closure-38_AVATAR_1
