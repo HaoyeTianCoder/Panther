@@ -124,14 +124,14 @@ class Prediction:
         # plt.clf()
 
 
-        # # interaction
-        # shap_interaction_values = explainer_tree_all.shap_interaction_values(x_test)
-        # shap.summary_plot(shap_interaction_values, x_test, max_display=10)
-        # # only two features interact, no any other features involved.
-        # shap.dependence_plot(("singleLine", "B-1530"), shap_interaction_values, x_test, display_features=x_test)
-        # plt.savefig('../images/interaction_single.png')
-        # # except for 'L-1187', the final interaction result of 'singleLine' in figure is influenced by other features .
-        # # shap.dependence_plot('singleLine', shap_values_tree, x_test, interaction_index='L-1187',)
+        # interaction
+        shap_interaction_values = explainer_tree_all.shap_interaction_values(x_test)
+        shap.summary_plot(shap_interaction_values, x_test, max_display=10)
+        # only two features interact, no any other features involved.
+        shap.dependence_plot(("singleLine", "B-1530"), shap_interaction_values, x_test, display_features=x_test)
+        plt.savefig('../images/interaction_single.png')
+        # except for 'L-1187', the final interaction result of 'singleLine' in figure is influenced by other features .
+        # shap.dependence_plot('singleLine', shap_values_tree, x_test, interaction_index='L-1187',)
 
 
         # analysis single sample for the last time
