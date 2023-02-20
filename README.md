@@ -3,11 +3,13 @@
 @article{tian2022best,
   title={The Best of Both Worlds: Combining Learned Embeddings with Engineered Features for Accurate Prediction of Correct Patches},
   author={Tian, Haoye and Liu, Kui and Li, Yinghua and Kabor{\'e}, Abdoul Kader and Koyuncu, Anil and Habib, Andrew and Li, Li and Wen, Junhao and Klein, Jacques and Bissyand{\'e}, Tegawend{\'e} F},
-  journal={arXiv preprint arXiv:2203.08912},
-  year={2022}
+  journal={ACM Transactions on Software Engineering and Methodology},
+  url = {https://doi.org/10.1145/3576039}, 
+  doi = {10.1145/3576039},
+  publisher={ACM New York, NY}
 }
 ```
-Paper Link: 
+Paper Link: https://dl.acm.org/doi/abs/10.1145/3576039
 
 Leopard and Panther
 =======
